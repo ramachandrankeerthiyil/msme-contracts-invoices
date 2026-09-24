@@ -1,7 +1,7 @@
 ---
 id: UI
 title: UI design system
-status: draft
+status: approved
 ---
 
 # UI design system

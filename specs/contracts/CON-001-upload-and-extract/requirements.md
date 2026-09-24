@@ -1,7 +1,7 @@
 ---
 id: CON-001
 title: Contract upload and AI extraction
-status: draft
+status: approved
 depends_on: [CONTRACTS, PLT-001, PLT-002, ADR-0002]
 ---
 
@@ -25,6 +25,7 @@ terms and risks, without the user needing to read the whole document.
 | CON-001-AC1 | THE SYSTEM SHALL provide an Upload contract page with a drop zone and a "Choose file" button, stating "PDF or Word (.docx), up to 20 MB". |
 | CON-001-AC2 | WHEN a valid PDF or DOCX file is uploaded THE SYSTEM SHALL store the original file, create a contract with `processing_status = uploaded`, and respond within 2 seconds with the contract ID. |
 | CON-001-AC3 | IF the file is not a real PDF/DOCX (checked by content, not just extension) or is over 20 MB THEN THE SYSTEM SHALL reject it without storing it, with a plain-language message naming the accepted formats and size. |
+| CON-001-AC3a | IF the uploaded file is identical (same SHA-256) to an existing contract THEN THE SYSTEM SHALL NOT store or process it again, and SHALL show "This contract was already uploaded on <date>" with a link to the existing contract. |
 | CON-001-AC4 | WHEN a contract is uploaded THE SYSTEM SHALL extract its text and send it to the configured Claude model, requesting the extraction schema in `contracts/module.md`. |
 | CON-001-AC5 | WHEN the AI response is valid against the schema THE SYSTEM SHALL save the title, summary, parties, start/end dates, key dates, terms and risks, plus the raw extraction and model name, and set `processing_status = completed`. |
 | CON-001-AC6 | IF the document contains no extractable text (e.g. a scanned PDF) THEN THE SYSTEM SHALL set `processing_status = failed` with the message "This file looks like a scanned image. Please upload a text-based PDF or Word document." |
@@ -41,5 +42,4 @@ terms and risks, without the user needing to read the whole document.
 
 ## Open questions
 
-- How should duplicate uploads of the same file be handled? (module.md Q1; proposal: detect by
-  file hash and link to the existing contract.) _Resolved: `.docx` only._
+- None. (Resolved: `.docx` only; duplicate files detected by hash — AC3a.)

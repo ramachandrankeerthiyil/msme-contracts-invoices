@@ -1,7 +1,7 @@
 ---
 id: CON-002
 title: Contract list and detail
-status: draft
+status: approved
 depends_on: [CON-001]
 ---
 

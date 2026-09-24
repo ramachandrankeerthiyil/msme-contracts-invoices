@@ -1,7 +1,7 @@
 ---
 id: PRODUCT
 title: Product overview
-status: draft
+status: approved
 ---
 
 # Product overview

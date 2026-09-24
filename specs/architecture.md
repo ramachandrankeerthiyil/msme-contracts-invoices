@@ -1,7 +1,7 @@
 ---
 id: ARCHITECTURE
 title: Architecture
-status: draft
+status: approved
 ---
 
 # Architecture

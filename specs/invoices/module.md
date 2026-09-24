@@ -1,7 +1,7 @@
 ---
 id: INVOICES
 title: Invoices module
-status: draft
+status: approved
 ---
 
 # Invoices module
@@ -15,9 +15,9 @@ risk, and this week's totals. Independent of the Contracts module.
 
 | ID | Feature | Status |
 |---|---|---|
-| INV-001 | Excel upload (create / update invoices) | draft |
-| INV-002 | Invoice list with status flags | draft |
-| INV-003 | Invoice dashboard | draft |
+| INV-001 | Excel upload (create / update invoices) | requirements approved |
+| INV-002 | Invoice list with status flags | requirements approved |
+| INV-003 | Invoice dashboard | requirements approved |
 
 ## Excel input format
 

@@ -1,7 +1,7 @@
 ---
 id: PLT-002
 title: Logging and observability
-status: draft
+status: approved
 depends_on: [ARCHITECTURE]
 ---
 
@@ -41,4 +41,4 @@ user sees on screen.
 
 ## Open questions
 
-- Should OpenTelemetry tracing be added in the POC, or deferred (proposed)?
+- None. (Resolved: OpenTelemetry tracing is deferred beyond the POC.)

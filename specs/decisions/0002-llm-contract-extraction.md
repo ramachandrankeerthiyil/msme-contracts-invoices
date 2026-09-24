@@ -1,7 +1,7 @@
 ---
 id: ADR-0002
 title: Use an LLM (Claude API) to extract contract data
-status: proposed
+status: accepted
 date: 2026-09-24
 ---
 

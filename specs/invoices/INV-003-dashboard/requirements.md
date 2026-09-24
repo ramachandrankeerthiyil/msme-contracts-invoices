@@ -1,7 +1,7 @@
 ---
 id: INV-003
 title: Invoice dashboard
-status: draft
+status: approved
 depends_on: [INV-002]
 ---
 

@@ -1,7 +1,7 @@
 ---
 id: ADR-0001
 title: Technology stack for the POC
-status: proposed
+status: accepted
 date: 2026-09-24
 ---
 

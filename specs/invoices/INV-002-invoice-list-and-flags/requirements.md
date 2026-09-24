@@ -1,7 +1,7 @@
 ---
 id: INV-002
 title: Invoice list with status flags
-status: draft
+status: approved
 depends_on: [INV-001]
 ---
 

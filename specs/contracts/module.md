@@ -1,7 +1,7 @@
 ---
 id: CONTRACTS
 title: Contracts module
-status: draft
+status: approved
 ---
 
 # Contracts module
@@ -16,9 +16,9 @@ dashboard. Independent of the Invoices module.
 
 | ID | Feature | Status |
 |---|---|---|
-| CON-001 | Upload & AI extraction | draft |
-| CON-002 | Contract list & detail | draft |
-| CON-003 | Contract dashboard | draft |
+| CON-001 | Upload & AI extraction | requirements approved |
+| CON-002 | Contract list & detail | requirements approved |
+| CON-003 | Contract dashboard | requirements approved |
 
 ## Accepted files
 
@@ -68,6 +68,7 @@ id                 uuid PK                ────────────�
 file_name          text                   id           uuid PK
 file_type          text 'pdf'|'docx'      contract_id  uuid FK → contracts (cascade delete)
 stored_path        text                   …fields as in the extraction schema…
+file_sha256        text UNIQUE
 uploaded_at        timestamptz
 processing_status  text (see lifecycle)
 error_message      text NULL
@@ -127,9 +128,8 @@ reason next to the badge: "Expires in 2 days", "2 high risks", or both.
 | "Not yet started" on the dashboard | Gets its own KPI card |
 | Word format | `.docx` only (no legacy `.doc`) |
 | Deleting contracts | Not allowed in the POC |
+| Same file uploaded twice | Detected by SHA-256 hash of the file; not stored again. The user sees "This contract was already uploaded on <date>" with a link to it. |
 
 ## Open questions
 
-1. Should uploading the same file twice create a second contract, or be detected as a duplicate?
-   _Proposal:_ detect it by file hash and show "This contract was already uploaded on <date>",
-   with a link to the existing contract.
+- None.
