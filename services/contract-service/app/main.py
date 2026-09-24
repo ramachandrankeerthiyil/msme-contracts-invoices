@@ -1,0 +1,66 @@
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
+
+from fastapi import FastAPI
+
+from app.api import api_router
+from app.config import Settings, get_settings
+from app.core import health, metrics
+from app.core.access_log import AccessLogMiddleware
+from app.core.errors import UnhandledErrorMiddleware, register_error_handlers
+from app.core.health import ReadyCheck
+from app.core.logging import configure_logging, get_logger
+from app.core.metrics import MetricsMiddleware
+from app.core.request_context import RequestContextMiddleware
+from app.db import create_engine, create_sessionmaker
+
+log = get_logger("app")
+
+
+async def check_llm_configured(app: FastAPI) -> bool:
+    """Contract extraction needs the Claude API key (PLT-002 AC6). No network call is made."""
+    return bool(app.state.settings.anthropic_api_key.get_secret_value())
+
+
+def create_app(settings: Settings | None = None) -> FastAPI:
+    settings = settings or get_settings()
+    configure_logging(settings.service_name, settings.log_level)
+
+    @asynccontextmanager
+    async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+        engine = create_engine(settings)
+        app.state.engine = engine
+        app.state.sessionmaker = create_sessionmaker(engine)
+        log.info(
+            "app.started",
+            message=f"{settings.service_name} {settings.service_version} started",
+            version=settings.service_version,
+            log_level=settings.log_level,
+        )
+        yield
+        await engine.dispose()
+
+    app = FastAPI(
+        title="Contract Service",
+        version=settings.service_version,
+        lifespan=lifespan,
+        docs_url=f"{settings.api_prefix}/docs",
+        openapi_url=f"{settings.api_prefix}/openapi.json",
+        redoc_url=None,
+    )
+    app.state.settings = settings
+    ready_checks: dict[str, ReadyCheck] = {"llm_api_key": check_llm_configured}
+    app.state.ready_checks = ready_checks
+
+    register_error_handlers(app)
+    app.include_router(health.router)
+    app.include_router(metrics.router)
+    app.include_router(api_router, prefix=settings.api_prefix)
+
+    # Added innermost first: the last one added wraps all the others.
+    app.add_middleware(UnhandledErrorMiddleware)
+    app.add_middleware(MetricsMiddleware)
+    app.add_middleware(AccessLogMiddleware)
+    app.add_middleware(RequestContextMiddleware)
+
+    return app

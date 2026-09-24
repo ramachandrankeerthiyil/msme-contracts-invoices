@@ -1,7 +1,7 @@
 ---
 id: PLT-002
 title: Logging and observability — design
-status: approved
+status: implemented
 requirements: ./requirements.md
 ---
 
@@ -75,7 +75,7 @@ caught.
 | `frontend` | `frontend` (PLT-001) | — | Nginx serving the built React app |
 | `gateway` | `gateway` | **`8080`** | The only public entry point |
 | `prometheus` | `prom/prometheus` | `9090` | `profiles: [observability]` |
-| `grafana` | `grafana/grafana` | `3000` | `profiles: [observability]`; anonymous viewer access |
+| `grafana` | `grafana/grafana` | `3001` (`GRAFANA_PORT`) | `profiles: [observability]`; anonymous viewer access; plugin downloads disabled |
 
 - Every service has a Docker `healthcheck` calling `/health`.
 - `gateway` `depends_on` the services with `condition: service_healthy`.
@@ -96,7 +96,7 @@ map $http_x_request_id $req_id {
 
 log_format json escape=json '{"timestamp":"$time_iso8601","service":"gateway","level":"info",'
   '"event":"http.access","request_id":"$req_id","method":"$request_method","path":"$uri",'
-  '"status":$status,"duration_ms":$request_time,"bytes":$body_bytes_sent}';
+  '"status":$status,"duration_s":$request_time,"bytes":$body_bytes_sent}';
 access_log /dev/stdout json;
 
 client_max_body_size 21m;               # 20 MB contracts + multipart overhead
@@ -111,7 +111,11 @@ location = /healthz      { return 200 "ok"; }
 - The path is passed through unchanged, so each service mounts its routers under `/api/<module>`.
 - `/health`, `/ready` and `/metrics` stay at the service root and are **not** routed through the
   gateway. Only Docker healthchecks and Prometheus reach them, over the internal network.
-- `$request_time` is in seconds; the Grafana dashboard converts it.
+- `$request_time` is in seconds, so the gateway logs `duration_s` (the services log `duration_ms`).
+- The gateway resolves services per request (Docker DNS), so it starts and serves the UI even
+  while a service is down. Upstream failures return the standard JSON error with code
+  `SERVICE_UNAVAILABLE` (503), and unknown `/api/*` paths return JSON `NOT_FOUND`.
+- The gateway hides the services' own `X-Request-ID` header and adds its own, so responses carry exactly one.
 
 ## Logging (AC1, AC3, AC4, AC5, AC9)
 
@@ -181,7 +185,8 @@ in the response body.
 
 ## Metrics (AC7)
 
-`prometheus_client` with a per-app `CollectorRegistry`, exposed at `GET /metrics`.
+`prometheus_client` with one service-level `CollectorRegistry` (module-level, so metrics are
+registered once even when tests create several app instances), exposed at `GET /metrics`.
 
 | Metric | Type | Labels | Defined by |
 |---|---|---|---|
