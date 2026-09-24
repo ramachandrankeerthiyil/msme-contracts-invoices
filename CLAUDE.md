@@ -35,4 +35,22 @@ Browser ──► gateway (Nginx) ──► frontend (React static build)
 
 ## Commands
 
-_To be filled in when the services are scaffolded (`docker compose up`, tests, lint, migrations)._
+Everything runs in Docker (Docker Desktop with WSL integration). Copy `.env.example` to `.env` first.
+
+```bash
+docker compose up -d --build                         # whole stack → http://localhost:8080
+docker compose --profile observability up -d --build # + Prometheus :9090, Grafana :3001
+docker compose logs -f invoice-service               # JSON logs; grep by request_id
+scripts/smoke.sh [--observability]                   # end-to-end smoke test (PLT-002)
+
+# Tests / lint for one service (uses the separate <db>_test database)
+docker compose run --rm --build invoice-service pytest
+docker compose run --rm --build invoice-service ruff check .
+
+# New migration (after changing models)
+docker compose run --rm invoice-service alembic revision --autogenerate -m "describe change"
+```
+
+- Service API docs: `http://localhost:8080/api/invoices/docs`, `…/api/contracts/docs`.
+- `/health`, `/ready`, `/metrics` are internal only (not routed by the gateway).
+- `app/core/` is intentionally duplicated in both services — change both copies together.

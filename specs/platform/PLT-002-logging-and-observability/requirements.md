@@ -1,7 +1,7 @@
 ---
 id: PLT-002
 title: Logging and observability
-status: approved
+status: implemented
 depends_on: [ARCHITECTURE]
 ---
 

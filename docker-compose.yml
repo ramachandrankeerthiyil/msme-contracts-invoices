@@ -1,0 +1,121 @@
+name: msme-poc
+
+# Settings shared by both business services.
+x-service-env: &service-env
+  LOG_LEVEL: ${LOG_LEVEL:-INFO}
+  APP_TIMEZONE: ${APP_TIMEZONE:-Asia/Kolkata}
+  POSTGRES_HOST: db
+  POSTGRES_PORT: 5432
+  POSTGRES_DB: ${POSTGRES_DB:-msme}
+
+x-service-healthcheck: &service-healthcheck
+  interval: 10s
+  timeout: 3s
+  retries: 5
+  start_period: 20s
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-msme}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: ${POSTGRES_DB:-msme}
+      INVOICE_DB_PASSWORD: ${INVOICE_DB_PASSWORD:?Set INVOICE_DB_PASSWORD in .env}
+      CONTRACT_DB_PASSWORD: ${CONTRACT_DB_PASSWORD:?Set CONTRACT_DB_PASSWORD in .env}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./db/init:/docker-entrypoint-initdb.d:ro
+    ports:
+      - "127.0.0.1:5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  invoice-service:
+    build: ./services/invoice-service
+    environment:
+      <<: *service-env
+      DB_USER: invoice_svc
+      DB_PASSWORD: ${INVOICE_DB_PASSWORD}
+      INVOICE_AT_RISK_DAYS: ${INVOICE_AT_RISK_DAYS:-5}
+    volumes:
+      - uploads:/data/uploads
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      <<: *service-healthcheck
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8002/health', timeout=2)"]
+
+  contract-service:
+    build: ./services/contract-service
+    environment:
+      <<: *service-env
+      DB_USER: contract_svc
+      DB_PASSWORD: ${CONTRACT_DB_PASSWORD}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      CONTRACT_LLM_MODEL: ${CONTRACT_LLM_MODEL:-claude-sonnet-5}
+      CONTRACT_AT_RISK_DAYS: ${CONTRACT_AT_RISK_DAYS:-3}
+    volumes:
+      - uploads:/data/uploads
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      <<: *service-healthcheck
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8001/health', timeout=2)"]
+
+  # Placeholder until PLT-001 replaces it with the React build.
+  frontend:
+    image: nginx:1.27-alpine
+    volumes:
+      - ./frontend/placeholder:/usr/share/nginx/html:ro
+
+  gateway:
+    build: ./gateway
+    ports:
+      - "8080:80"
+    depends_on:
+      invoice-service:
+        condition: service_healthy
+      contract-service:
+        condition: service_healthy
+      frontend:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1/healthz"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+  prometheus:
+    image: prom/prometheus:v2.55.1
+    profiles: [observability]
+    volumes:
+      - ./observability/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "127.0.0.1:9090:9090"
+    depends_on: [invoice-service, contract-service]
+
+  grafana:
+    image: grafana/grafana:11.3.0
+    profiles: [observability]
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /var/lib/grafana/dashboards/msme-poc.json
+      GF_PLUGINS_PREINSTALL_DISABLED: "true"
+    volumes:
+      - ./observability/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./observability/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    ports:
+      - "127.0.0.1:${GRAFANA_PORT:-3001}:3000"
+    depends_on: [prometheus]
+
+volumes:
+  pgdata:
+  uploads:
