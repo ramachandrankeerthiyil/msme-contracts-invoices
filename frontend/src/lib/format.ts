@@ -29,6 +29,29 @@ export function formatDate(value: string): string {
   return `${Number(day)} ${MONTHS[Number(month) - 1]} ${year}`
 }
 
+const TIME_FORMAT = new Intl.DateTimeFormat('en-IN', {
+  timeZone: APP_TIME_ZONE,
+  hour: 'numeric',
+  minute: '2-digit',
+  hour12: true,
+})
+
+/** `2026-09-24T05:12:44Z` → `24 Sep 2026, 10:42 am` (business time zone). */
+export function formatDateTime(timestamp: string): string {
+  const moment = new Date(timestamp)
+  if (Number.isNaN(moment.getTime())) return timestamp
+  // Some ICU versions put a narrow no-break space before "am"; normalise it.
+  const time = TIME_FORMAT.format(moment).replace(/\s+/g, ' ').toLowerCase()
+  return `${formatDate(timestamp)}, ${time}`
+}
+
+/** `2350000` → `2.2 MB`. */
+export function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} bytes`
+  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+}
+
 /** Groups an integer string the Indian way: 425000 → 4,25,000; 12345678 → 1,23,45,678. */
 function groupIndian(digits: string): string {
   if (digits.length <= 3) return digits

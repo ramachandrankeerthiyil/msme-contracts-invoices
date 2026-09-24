@@ -4,6 +4,7 @@ import json
 import logging
 import os
 from collections.abc import Callable, Iterator
+from pathlib import Path
 from typing import Any
 
 import pytest
@@ -79,6 +80,44 @@ def app(settings: Settings) -> FastAPI:
 
 @pytest.fixture
 def client(app: FastAPI) -> Iterator[TestClient]:
+    with TestClient(app) as test_client:
+        yield test_client
+
+
+async def _fetch(settings: Settings, statement: str) -> list[dict[str, Any]]:
+    engine = create_async_engine(
+        settings.database_url, connect_args={"server_settings": {"search_path": settings.db_schema}}
+    )
+    async with engine.connect() as conn:
+        result = await conn.execute(text(statement))
+        rows = [dict(row._mapping) for row in result]
+    await engine.dispose()
+    return rows
+
+
+@pytest.fixture
+def db_rows(settings: Settings) -> Callable[[str], list[dict[str, Any]]]:
+    """Runs a SELECT against the test schema: db_rows("SELECT * FROM invoices")."""
+    return lambda statement: asyncio.run(_fetch(settings, statement))
+
+
+@pytest.fixture
+def clean_tables(settings: Settings) -> None:
+    schema = settings.db_schema
+    asyncio.run(_execute(settings, f'TRUNCATE "{schema}".invoices, "{schema}".invoice_uploads'))
+
+
+@pytest.fixture
+def uploads_dir(tmp_path: Path) -> Path:
+    return tmp_path / "uploads"
+
+
+@pytest.fixture
+def upload_client(
+    settings: Settings, uploads_dir: Path, clean_tables: None
+) -> Iterator[TestClient]:
+    """An app client with empty invoice tables and a throwaway uploads directory."""
+    app = create_app(settings.model_copy(update={"uploads_dir": str(uploads_dir)}))
     with TestClient(app) as test_client:
         yield test_client
 

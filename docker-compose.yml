@@ -101,9 +101,11 @@ services:
     environment:
       HOME: /tmp
       BASE_URL: http://gateway
+      SAMPLES_DIR: /samples
       CI: "true"
     volumes:
       - ./frontend:/app
+      - ./samples:/samples:ro
     depends_on:
       gateway:
         condition: service_healthy

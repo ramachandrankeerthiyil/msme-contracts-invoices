@@ -44,7 +44,7 @@ interface ErrorBody {
   }
 }
 
-function logFailure(method: string, path: string, error: ApiError): void {
+export function logFailure(method: string, path: string, error: ApiError): void {
   console.error('[api]', {
     method,
     path,
