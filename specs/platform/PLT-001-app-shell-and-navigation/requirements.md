@@ -1,7 +1,7 @@
 ---
 id: PLT-001
 title: App shell and navigation
-status: approved
+status: implemented
 depends_on: [UI]
 ---
 

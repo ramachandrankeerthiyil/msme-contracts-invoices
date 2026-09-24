@@ -1,7 +1,7 @@
 ---
 id: PLT-001
 title: App shell and navigation — design
-status: approved
+status: implemented
 requirements: ./requirements.md
 ---
 
@@ -141,10 +141,17 @@ export class ApiError extends Error {
 
 ## Design tokens → Tailwind
 
-`styles/tokens.css` defines every token from `ui-design-system.md` as a CSS variable. Tailwind v4
-`@theme` maps them to utilities (`bg-surface`, `text-muted`, `text-h1` …). A lint rule
-(`eslint-plugin-tailwindcss` with no arbitrary values, plus a grep check in CI) blocks raw hex
-colours and pixel font sizes outside `tokens.css` (AC1, AC11).
+`styles/tokens.css` defines every token from `ui-design-system.md` inside Tailwind v4 `@theme`,
+which makes them both CSS variables and utilities (`bg-surface`, `text-text-muted`, `text-h1` …).
+Tailwind's default colour, type and radius scales are reset, so only tokens exist; `--spacing` is
+4px so the spacing scale matches the design system. `scripts/check-tokens.mjs` (run by
+`npm run lint`) blocks raw hex/rgb colours, px values and arbitrary Tailwind colour/size values
+outside `tokens.css` (AC1, AC11). _(eslint-plugin-tailwindcss was dropped: it does not support
+Tailwind v4.)_
+
+shadcn/ui primitives are added by hand as needed (Button, Sheet on Radix Dialog, Skeleton so far),
+restyled with the tokens. `tailwind-merge` is not used: it would treat `text-h1` (size) and
+`text-text` (colour) as conflicting.
 
 - **Font:** `@fontsource-variable/inter`, self-hosted. `html { font-size: 18px }`, and Tailwind's
   type scale is replaced by the token scale, so nothing can render below 16px.
@@ -184,5 +191,5 @@ colours and pixel font sizes outside `tokens.css` (AC1, AC11).
 | AC7 | Playwright at 800px wide: sidebar hidden, Menu opens sheet, Escape closes it, focus returns |
 | AC8 | Playwright: Tab reaches the skip link first; the whole nav is operable by keyboard; focus moves to h1 after navigation |
 | AC9 | Playwright: `/nope` shows Not found with 3 links |
-| AC10 | Playwright with the `/api/invoices/**` route mocked to 503: friendly alert + reference, nav still works |
+| AC10 | Vitest: `apiFetch` maps 502/503/504 and network failures to `SERVICE_UNAVAILABLE`; `QueryBoundary` shows the friendly alert + reference + Try again. Playwright: with `/api/**` mocked to 503 the shell loads and navigates. (No PLT-001 page calls an API yet; the dashboard features add page-level e2e checks.) |
 | AC11 | `@axe-core/playwright` on every route: zero serious/critical violations; computed font-size ≥ 16px for all text nodes |

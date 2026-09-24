@@ -47,6 +47,16 @@ scripts/smoke.sh [--observability]                   # end-to-end smoke test (PL
 docker compose run --rm --build invoice-service pytest
 docker compose run --rm --build invoice-service ruff check .
 
+# Frontend (Node runs in a container; no local install needed)
+docker compose --profile dev up frontend-dev         # Vite hot reload → http://localhost:5173
+docker compose run --rm frontend-dev npm test        # unit tests (Vitest)
+docker compose run --rm frontend-dev npm run lint    # ESLint + design-token check
+docker compose --profile e2e run --rm e2e            # Playwright e2e + axe, against :8080 stack
+
+# Demo data (dates relative to today) → samples/
+docker run --rm -u "$(id -u):$(id -g)" -e HOME=/tmp -v "$PWD":/work -w /work python:3.12-slim \
+  sh -c "pip install -q --target /tmp/py openpyxl python-docx && PYTHONPATH=/tmp/py python scripts/make_samples.py"
+
 # New migration (after changing models)
 docker compose run --rm invoice-service alembic revision --autogenerate -m "describe change"
 ```
@@ -54,3 +64,6 @@ docker compose run --rm invoice-service alembic revision --autogenerate -m "desc
 - Service API docs: `http://localhost:8080/api/invoices/docs`, `…/api/contracts/docs`.
 - `/health`, `/ready`, `/metrics` are internal only (not routed by the gateway).
 - `app/core/` is intentionally duplicated in both services — change both copies together.
+- Frontend: new pages plug in via the module registry (`frontend/src/app/modules.ts`) and route
+  `handle` (title, crumb, parents, action). Only `src/styles/tokens.css` may contain raw colours
+  or px sizes (`scripts/check-tokens.mjs` enforces this).
