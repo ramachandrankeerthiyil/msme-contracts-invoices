@@ -41,17 +41,18 @@ A downloadable template (`GET /api/invoices/template`) has these exact headers.
 invoice_uploads                          invoices
 ───────────────                          ────────
 id              uuid PK                  id               uuid PK
-file_name       text                     invoice_number   text UNIQUE (normalised, case-insensitive)
-stored_path     text                     customer_name    text
-uploaded_at     timestamptz              date_raised      date
-rows_total      int                      due_date         date
-rows_created    int                      amount           numeric(14,2)
-rows_updated    int                      paid_date        date NULL
-rows_rejected   int                      record_status    text  'new' | 'updated'
+file_name       text                     invoice_number   text  (as displayed)
+stored_path     text                     invoice_number_key text UNIQUE  (upper + trimmed)
+uploaded_at     timestamptz              customer_name    text
+status          text 'completed' |       date_raised      date
+                     'no_valid_rows'     due_date         date
+rows_total      int                      amount           numeric(14,2)
+rows_created    int                      paid_date        date NULL
+rows_updated    int                      record_status    text  'new' | 'updated'
 rows_overwritten int                     record_updated_at timestamptz NULL  (set when overwritten)
-rejections      jsonb [{row, reason}]    first_upload_id  uuid FK → invoice_uploads
-                                         last_upload_id   uuid FK → invoice_uploads
-                                         created_at / updated_at
+rows_rejected   int                      first_upload_id  uuid FK → invoice_uploads
+rejections      jsonb [{row, invoice_number, reason}]   last_upload_id uuid FK → invoice_uploads
+overwrites      jsonb [{row, replaced_row, invoice_number}]   created_at / updated_at
 ```
 
 ## Business rules
@@ -91,7 +92,8 @@ Record status is independent of payment status. An invoice can be both "Updated"
 ### Current week
 
 The **current week** is the 7-day window `[U, U + 6 days]`, where **U = the date of the most
-recent successful invoice upload** (in Asia/Kolkata).
+recent successful invoice upload** (in Asia/Kolkata). An upload is successful when it saved at
+least one row (`status = 'completed'`).
 
 An invoice is **in the current week** when its **Due Date** falls inside the window, because the
 week's metrics are about collection and follow-up.
