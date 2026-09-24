@@ -49,8 +49,9 @@ Branch: `feat/INV-001-excel-upload` (after PLT-002 and PLT-001 have merged)
 
 ## E. Samples & verification
 
-- [ ] 16. `scripts/make_samples.py` → `samples/invoices-sample.xlsx` (every status, a few
-        invalid rows, one in-file duplicate).
+- [x] 16. `scripts/make_samples.py` → `samples/invoices-sample.xlsx` (every status, a few
+        invalid rows, one in-file duplicate). Delivered as two files: `invoices-sample.xlsx`
+        (all statuses, valid) and `invoices-with-errors.xlsx`, plus two sample `.docx` contracts.
 - [ ] 17. Playwright: upload the sample, check the summary and tables; upload a file with a missing
         column; keyboard-only upload; axe check. — _AC1, AC3, AC9_
 - [ ] 18. Set statuses to `implemented`; commit and merge.

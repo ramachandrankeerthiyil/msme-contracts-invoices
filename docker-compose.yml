@@ -68,11 +68,46 @@ services:
       <<: *service-healthcheck
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8001/health', timeout=2)"]
 
-  # Placeholder until PLT-001 replaces it with the React build.
+  # React build served by Nginx (PLT-001).
   frontend:
-    image: nginx:1.27-alpine
+    build: ./frontend
+
+  # Vite dev server with hot reload, and the container used for npm commands:
+  #   docker compose --profile dev up frontend-dev        → http://localhost:5173
+  #   docker compose run --rm frontend-dev npm test
+  frontend-dev:
+    image: node:22-slim
+    profiles: [dev]
+    working_dir: /app
+    user: "${UID:-1000}:${GID:-1000}"
+    environment:
+      HOME: /tmp
+      VITE_API_PROXY: http://gateway
     volumes:
-      - ./frontend/placeholder:/usr/share/nginx/html:ro
+      - ./frontend:/app
+    ports:
+      - "127.0.0.1:5173:5173"
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+
+  # End-to-end tests against the running stack:
+  #   docker compose --profile e2e run --rm e2e
+  e2e:
+    image: mcr.microsoft.com/playwright:v1.49.0-noble
+    profiles: [e2e]
+    working_dir: /app
+    user: "${UID:-1000}:${GID:-1000}"
+    ipc: host
+    init: true
+    environment:
+      HOME: /tmp
+      BASE_URL: http://gateway
+      CI: "true"
+    volumes:
+      - ./frontend:/app
+    depends_on:
+      gateway:
+        condition: service_healthy
+    command: npx playwright test
 
   gateway:
     build: ./gateway
