@@ -7,12 +7,12 @@ from sqlalchemy.ext.asyncio import create_async_engine
 
 from app.config import get_settings
 from app.core.logging import configure_logging
+from app.db.models import Base
 
 settings = get_settings()
 configure_logging(settings.service_name, settings.log_level)
 
-# Set to the service's declarative Base.metadata once models exist (INV-001).
-target_metadata = None
+target_metadata = Base.metadata
 
 
 def _run(connection: Connection) -> None:

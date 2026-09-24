@@ -88,8 +88,15 @@ def test_PLT_002_AC5_sensitive_keys_are_redacted_and_long_values_truncated():
         },
     )
 
-    for key in ("api_key", "Password", "authorization", "document_text", "raw_extraction",
-                "rows", "content"):
+    for key in (
+        "api_key",
+        "Password",
+        "authorization",
+        "document_text",
+        "raw_extraction",
+        "rows",
+        "content",
+    ):
         assert event[key] == REDACTED
     assert event["note"].startswith("y" * 500)
     assert event["note"].endswith("[truncated]")

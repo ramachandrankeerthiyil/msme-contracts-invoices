@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { formatDate, formatINR, relativeDue, todayIso } from './format'
+import { formatDate, formatDateTime, formatFileSize, formatINR, relativeDue, todayIso } from './format'
 
 describe('formatDate', () => {
   it.each([
@@ -49,6 +49,24 @@ describe('relativeDue', () => {
     ['2026-10-01', 'due in 7 days'],
   ])('%s → %s', (due, expected) => {
     expect(relativeDue(due, today)).toBe(expected)
+  })
+})
+
+describe('formatDateTime', () => {
+  it('shows the Asia/Kolkata date and time', () => {
+    expect(formatDateTime('2026-09-24T05:12:00Z')).toBe('24 Sep 2026, 10:42 am')
+    expect(formatDateTime('2026-09-24T20:00:00Z')).toBe('25 Sep 2026, 1:30 am')
+  })
+})
+
+describe('formatFileSize', () => {
+  it.each([
+    [512, '512 bytes'],
+    [6972, '7 KB'],
+    [10 * 1024 * 1024, '10.0 MB'],
+    [2_350_000, '2.2 MB'],
+  ])('%i → %s', (bytes, expected) => {
+    expect(formatFileSize(bytes)).toBe(expected)
   })
 })
 

@@ -1,7 +1,7 @@
 ---
 id: INV-001
 title: Invoice Excel upload
-status: approved
+status: implemented
 depends_on: [INVOICES, PLT-001, PLT-002]
 ---
 

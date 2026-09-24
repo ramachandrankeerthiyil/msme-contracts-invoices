@@ -1,7 +1,7 @@
 ---
 id: INV-001
 title: Invoice Excel upload — design
-status: approved
+status: implemented
 requirements: ./requirements.md
 ---
 
