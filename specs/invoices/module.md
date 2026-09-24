@@ -98,6 +98,9 @@ least one row (`status = 'completed'`).
 An invoice is **in the current week** when its **Due Date** falls inside the window, because the
 week's metrics are about collection and follow-up.
 
+**Need follow-up this week** = Outstanding or At risk **and** `due_date ≤ U + 6`. This includes
+invoices already overdue before the week started (decision 2026-09-25).
+
 ### Currency
 
 All amounts are **INR**, formatted `en-IN` with lakh/crore grouping: `₹4,25,000.00`.
@@ -122,6 +125,7 @@ All amounts are **INR**, formatted `en-IN` with lakh/crore grouping: `₹4,25,00
 | Currency | INR, single currency, `en-IN` formatting |
 | File formats | `.xlsx` only (no `.xls` or `.csv`) |
 | Does "updated" ever reset? | No. The date refreshes on each later overwrite. |
+| Need follow-up this week | Outstanding or at risk with due date ≤ end of week (includes older overdue) |
 
 ## Open questions
 
