@@ -1,6 +1,17 @@
 import { describe, expect, it } from 'vitest'
 
-import { formatDate, formatDateTime, formatFileSize, formatINR, relativeDue, todayIso } from './format'
+import {
+  countOf,
+  dueHintFromDays,
+  formatDate,
+  formatDateRange,
+  formatDateTime,
+  formatDayMonth,
+  formatFileSize,
+  formatINR,
+  relativeDue,
+  todayIso,
+} from './format'
 
 describe('formatDate', () => {
   it.each([
@@ -49,6 +60,24 @@ describe('relativeDue', () => {
     ['2026-10-01', 'due in 7 days'],
   ])('%s → %s', (due, expected) => {
     expect(relativeDue(due, today)).toBe(expected)
+  })
+})
+
+describe('ranges and counts', () => {
+  it('formats day-month and ranges', () => {
+    expect(formatDayMonth('2026-09-24')).toBe('24 Sep')
+    expect(formatDateRange('2026-09-24', '2026-09-30')).toBe('24 Sep – 30 Sep 2026')
+    expect(formatDateRange('2026-12-29', '2027-01-04')).toBe('29 Dec 2026 – 4 Jan 2027')
+  })
+
+  it('counts with singular and plural', () => {
+    expect(countOf(1, 'invoice')).toBe('1 invoice')
+    expect(countOf(12345, 'invoice')).toBe('12,345 invoices')
+  })
+
+  it('turns day offsets into due hints', () => {
+    expect(dueHintFromDays(-41)).toBe('41 days overdue')
+    expect(dueHintFromDays(0)).toBe('due today')
   })
 })
 

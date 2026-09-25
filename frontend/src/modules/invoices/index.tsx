@@ -1,14 +1,14 @@
 import { LayoutDashboard, ReceiptIndianRupee, Upload } from 'lucide-react'
 
 import type { Crumb, ModuleDefinition, PageAction } from '@/app/types'
-import { ComingSoonPage } from '@/pages/ComingSoonPage'
 
+import { InvoiceDashboardPage } from './pages/InvoiceDashboardPage'
+import { InvoicesPage } from './pages/InvoicesPage'
 import { UploadInvoicesPage } from './pages/UploadInvoicesPage'
 
 const parents: Crumb[] = [{ label: 'Invoices', to: '/invoices/dashboard' }]
 const uploadAction: PageAction = { label: 'Upload invoices', to: '/invoices/upload', icon: Upload }
 
-// Pages still marked ComingSoon are delivered by INV-002 (list) and INV-003 (dashboard).
 export const invoicesModule: ModuleDefinition = {
   id: 'invoices',
   label: 'Invoices',
@@ -23,12 +23,12 @@ export const invoicesModule: ModuleDefinition = {
       children: [
         {
           index: true,
-          element: <ComingSoonPage />,
+          element: <InvoicesPage />,
           handle: { title: 'All invoices', crumb: 'All invoices', parents, action: uploadAction },
         },
         {
           path: 'dashboard',
-          element: <ComingSoonPage />,
+          element: <InvoiceDashboardPage />,
           handle: { title: 'Invoice dashboard', crumb: 'Dashboard', parents, action: uploadAction },
         },
         {

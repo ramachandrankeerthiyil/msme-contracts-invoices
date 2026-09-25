@@ -1,7 +1,7 @@
 ---
 id: INV-003
 title: Invoice dashboard — design
-status: approved
+status: implemented
 requirements: ./requirements.md
 ---
 
@@ -118,6 +118,7 @@ Top 5 to follow up                        This week's value by status
 | **KPI cards (AC2–AC4, AC6)** | Three `KpiCard`s (PLT-001). The follow-up card uses the warning variant when above 0, and the success variant with the hint "Nothing to chase this week" at 0. Each card links to `/invoices?` + its `links` entry. |
 | **Top 5 (AC7)** | An ordered list of links. Each row shows a status icon + customer (bold), the amount (right), and "INV-… · 41 days overdue" beneath. Each links to `/invoices?view=follow_up&q=<invoice_number>`. A footer link, "See all invoices needing follow-up", uses the follow-up filter. If the list is empty: "No invoices need follow-up. Well done." |
 | **Value by status (AC8)** | Built as a **table that is also the chart**: each row has a status badge, a horizontal bar (width = share of the week's value, drawn with CSS using the status colour token), the amount and the count. Screen readers get a normal table with a caption. This replaces a Recharts graphic, because with four categories a labelled bar table is clearer for older users and fully accessible without a separate alternative. |
+| **Card layout (as built)** | CSS container queries: 1 column in narrow spaces (Home), 2 + 1 medium, and 3 across (3fr 2fr 2fr, value card widest) from 48rem, so ₹ amounts never overflow. |
 | **Loading / error** | Card-shaped skeletons, then `QueryBoundary` error with Try again (PLT-001). |
 | **Empty (AC9)** | When `has_data = false`: `EmptyState` "No invoices yet" with an **Upload invoices** button. No zero-value cards. |
 

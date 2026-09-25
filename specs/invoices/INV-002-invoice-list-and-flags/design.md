@@ -1,7 +1,7 @@
 ---
 id: INV-002
 title: Invoice list with status flags — design
-status: approved
+status: implemented
 requirements: ./requirements.md
 ---
 
@@ -151,6 +151,15 @@ All invoices                                            [ ⬆ Upload invoices ]
 
 All state lives in URL search params (AC7), so Back and Forward restore the exact view. Defaults
 are omitted from the URL to keep it short.
+
+### As built: table fits a laptop screen
+
+The 8-column table was 168px wider than a 1280px laptop's content area, which forced sideways
+scrolling and hid Status and Record. It now has **6 columns**: Invoice (number, with "Raised <date>"
+beneath), Customer, Due (date + hint; paid invoices show "paid on <date>"), Amount, Status,
+Record. Every field from AC1 is still shown. Sortable columns: Invoice, Customer, Due, Amount,
+Status (the API still accepts `date_raised` / `paid_date` sorts). A Playwright test checks
+that the table fits at 1280px.
 
 ## Observability
 

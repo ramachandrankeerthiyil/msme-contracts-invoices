@@ -16,8 +16,8 @@ risk, and this week's totals. Independent of the Contracts module.
 | ID | Feature | Status |
 |---|---|---|
 | INV-001 | Excel upload (create / update invoices) | implemented |
-| INV-002 | Invoice list with status flags | requirements approved |
-| INV-003 | Invoice dashboard | requirements approved |
+| INV-002 | Invoice list with status flags | implemented |
+| INV-003 | Invoice dashboard | implemented |
 
 ## Excel input format
 
