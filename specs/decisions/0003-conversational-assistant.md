@@ -1,7 +1,7 @@
 ---
 id: ADR-0003
 title: Conversational assistant as a separate service using tools over the existing APIs
-status: proposed
+status: accepted
 date: 2026-09-25
 ---
 
@@ -33,7 +33,7 @@ date) and checkable.
 5. **Server-Sent Events** from `POST /api/assistant/chat` to stream the answer. The conversation
    is kept by the browser (tab session) and sent with each question, so the server stays
    stateless and stores no conversation text.
-6. **Model: `ASSISTANT_LLM_MODEL`, default `claude-sonnet-5`** (pending confirmation), with
+6. **Model: `ASSISTANT_LLM_MODEL`, default `claude-sonnet-5`** (product-owner decision), with
    adaptive thinking and `effort: medium` for chat responsiveness. There is also a deterministic
    **stand-in model** (`ASSISTANT_LLM=fake`) that calls the real tools, so tests and e2e runs never
    use the paid API.

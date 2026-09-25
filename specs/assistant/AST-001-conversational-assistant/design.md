@@ -1,7 +1,7 @@
 ---
 id: AST-001
 title: Conversational AI assistant — design
-status: draft
+status: approved
 requirements: ./requirements.md
 ---
 
@@ -73,7 +73,7 @@ Validation (422 `VALIDATION_ERROR`):
 
 | Setting | Value |
 |---|---|
-| `model` | `ASSISTANT_LLM_MODEL`, default **`claude-sonnet-5`** (open question 1) |
+| `model` | `ASSISTANT_LLM_MODEL`, default **`claude-sonnet-5`** (product-owner decision) |
 | Thinking / effort | `{type: "adaptive"}` / `output_config.effort = ASSISTANT_LLM_EFFORT` (default `medium`, for responsiveness) |
 | `max_tokens` | 4,000 per step |
 | `system` | Fixed instructions (below) plus today's date line, cached with automatic `cache_control` |
@@ -81,7 +81,7 @@ Validation (422 `VALIDATION_ERROR`):
 | Loop | Up to 8 tool calls per question; parallel `tool_use` blocks run concurrently and their results go back in one message. When the limit is reached the model is told to answer with what it has. |
 
 **System prompt (outline):**
-- You are "Ask AI", the assistant for a small Indian business's contracts and invoices app.
+- You are "Talk to Me", the assistant for a small Indian business's contracts and invoices app.
 - Today is {date} (Asia/Kolkata).
 - Answer only from tool results; never invent records, amounts or dates; say plainly when
   something isn't in the data.
@@ -113,15 +113,15 @@ services/assistant-service/        # same skeleton as the others: app/core ident
   `proxy_buffering off` and a 120s read timeout.
 - The Prometheus scrape config and Grafana dashboard gain the new service.
 
-## UI — `/assistant` ("Ask AI")
+## UI — `/assistant` ("Talk to Me")
 
 The design follows common chat conventions (ChatGPT, Claude.ai, Copilot), adapted to our design
 system and older users: large text, calm colours, obvious buttons with labels, and nothing that
 moves unexpectedly.
 
 ```
-Assistant › Ask AI
-Ask AI                                                       [ ↺ New conversation ]
+Assistant › Talk to Me
+Talk to Me                                                       [ ↺ New conversation ]
 Ask questions about your contracts and invoices in plain English.
 ┌──────────────────────────────────────────────────────────────────────────────┐
 │                         ✦  How can I help today?                              │
@@ -132,7 +132,7 @@ Ask questions about your contracts and invoices in plain English.
 │                                  ┌──────────────────────────────────────────┐│
 │                                  │ Which invoices are unpaid as of today?  ││  ← you (right, light blue)
 │                                  └──────────────────────────────────────────┘│
-│ ✦ Ask AI                                                                     │
+│ ✦ Talk to Me                                                                     │
 │   ✔ Checked unpaid invoices (9)                                              │  ← lookups (muted)
 │   You have **9 unpaid invoices** worth **₹9,94,150.75**:                     │  ← answer (left, white card)
 │   | Invoice | Customer | Due | Amount |                                      │
@@ -142,14 +142,14 @@ Ask questions about your contracts and invoices in plain English.
 ┌──────────────────────────────────────────────────────────────── (sticky) ──┐
 │ Ask a question about your contracts or invoices                             │
 │ [ multi-line box, grows to 6 lines                                  ] [➤ Send] │
-│ Ask AI can make mistakes. Check important details on the contract or invoice page. │
+│ Talk to Me can make mistakes. Check important details on the contract or invoice page. │
 └──────────────────────────────────────────────────────────────────────────────┘
 ```
 
 | Element | Behaviour |
 |---|---|
-| **Navigation (AC1)** | A new **ASSISTANT** sidebar group with "Ask AI" and a sparkles icon, added through the module registry (`modules/assistant`). |
-| **Conversation** | A `role="log"` list. User turns are right-aligned light-blue bubbles; answers are left-aligned white cards with an "Ask AI" label. Max width about 75 characters. The newest message scrolls into view, but only if the user is already near the bottom (no scroll-jacking). |
+| **Navigation (AC1)** | A new **ASSISTANT** sidebar group with "Talk to Me" and a sparkles icon, added through the module registry (`modules/assistant`). |
+| **Conversation** | A `role="log"` list. User turns are right-aligned light-blue bubbles; answers are left-aligned white cards with an "Talk to Me" label. Max width about 75 characters. The newest message scrolls into view, but only if the user is already near the bottom (no scroll-jacking). |
 | **Suggestions (AC2)** | Six large buttons (48px+), shown only while the conversation is empty. |
 | **Question box (AC3)** | A visible label. The box auto-grows from 2 to 6 lines. **Enter** sends; **Shift+Enter** adds a new line. A character count appears after 800 characters, turning to a warning at 1,000. **Send** is disabled while the box is empty or an answer is streaming. |
 | **Streaming (AC4)** | Text appears as it arrives, with a blinking caret (reduced-motion safe). **Send** becomes **Stop** (secondary, square icon + "Stop") while streaming. Once stopped, the partial answer keeps a note: "(stopped)". |
@@ -158,7 +158,7 @@ Ask questions about your contracts and invoices in plain English.
 | **Copy (AC16)** | A "Copy" button (icon + label) under each finished answer. It says "Copied" for 2 seconds. |
 | **Accessibility (AC13)** | A polite live region announces "Answer ready" plus the first sentence once the answer is complete. Focus goes back to the question box. All buttons have visible labels. The page is readable at 200% zoom and phone width, where the question box stays at the bottom. |
 | **New conversation (AC8)** | Clears the conversation and `sessionStorage`. Asks for confirmation only if a question is being answered. |
-| **Errors (AC12)** | The failed turn shows `ErrorAlert` ("Ask AI couldn't answer that right now…" + reference) and **Try again**, which resends the same question. |
+| **Errors (AC12)** | The failed turn shows `ErrorAlert` ("Talk to Me couldn't answer that right now…" + reference) and **Try again**, which resends the same question. |
 
 ## Observability (AST-001 AC14)
 

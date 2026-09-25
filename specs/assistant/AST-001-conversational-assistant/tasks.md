@@ -1,7 +1,7 @@
 ---
 id: AST-001
 title: Conversational AI assistant — tasks
-status: draft
+status: approved
 design: ./design.md
 ---
 
@@ -33,7 +33,7 @@ Branch: `feat/AST-001-conversational-assistant` (the pre-assistant version is ta
 ## C. Frontend
 
 - [ ] 10. `lib/api/sse.ts`: POST + streamed SSE parsing with AbortController
-- [ ] 11. `modules/assistant`: registry entry (ASSISTANT group, Ask AI) + route — _AC1_
+- [ ] 11. `modules/assistant`: registry entry (ASSISTANT group, Talk to Me) + route — _AC1_
 - [ ] 12. `useConversation` (sessionStorage, send, stop, retry, new) — _AC4, AC8, AC12_
 - [ ] 13. Page: welcome + suggestions, message list (`role="log"`), lookups, Markdown answer
         (react-markdown + remark-gfm, in-app links only), Copy, sticky composer (auto-grow,
