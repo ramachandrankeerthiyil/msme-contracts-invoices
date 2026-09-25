@@ -22,14 +22,17 @@ export function StatusIcon({ variant, className }: { variant: StatusVariant; cla
 interface StatusBadgeProps {
   variant: StatusVariant
   label: string
+  /** Let long labels (e.g. "Updated on 24 Sep 2026") wrap in narrow table cells. */
+  wrap?: boolean
   className?: string
 }
 
-export function StatusBadge({ variant, label, className }: StatusBadgeProps) {
+export function StatusBadge({ variant, label, wrap, className }: StatusBadgeProps) {
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-small font-semibold whitespace-nowrap',
+        'inline-flex items-center gap-1.5 px-3 py-1 text-small font-semibold',
+        wrap ? 'rounded-lg' : 'rounded-full whitespace-nowrap',
         STATUS_STYLES[variant].badge,
         className,
       )}

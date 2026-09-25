@@ -86,10 +86,30 @@ function plural(n: number, word: string): string {
   return `${n} ${word}${n === 1 ? '' : 's'}`
 }
 
-/** `due today`, `due in 3 days`, `12 days overdue`. */
-export function relativeDue(dueDate: string, today: string = todayIso()): string {
-  const days = daysBetween(today, dueDate)
+/** `3` → `due in 3 days`, `0` → `due today`, `-12` → `12 days overdue`. */
+export function dueHintFromDays(days: number): string {
   if (days === 0) return 'due today'
   if (days > 0) return `due in ${plural(days, 'day')}`
   return `${plural(-days, 'day')} overdue`
+}
+
+/** `due today`, `due in 3 days`, `12 days overdue`. */
+export function relativeDue(dueDate: string, today: string = todayIso()): string {
+  return dueHintFromDays(daysBetween(today, dueDate))
+}
+
+/** `2026-09-24` → `24 Sep` (dates or timestamps). */
+export function formatDayMonth(value: string): string {
+  return formatDate(value).replace(/ \d{4}$/, '')
+}
+
+/** `24 Sep – 30 Sep 2026`; the start keeps its year only when the years differ. */
+export function formatDateRange(from: string, to: string): string {
+  const sameYear = from.slice(0, 4) === to.slice(0, 4)
+  return `${sameYear ? formatDayMonth(from) : formatDate(from)} – ${formatDate(to)}`
+}
+
+/** `1 invoice`, `18 invoices` (Indian digit grouping). */
+export function countOf(n: number, singular: string, plural = `${singular}s`): string {
+  return `${n.toLocaleString('en-IN')} ${n === 1 ? singular : plural}`
 }

@@ -24,7 +24,7 @@ export function KpiCard({ label, value, hint, variant, to }: KpiCardProps) {
         <p className="text-h3 text-text">{label}</p>
         {variant && <StatusIcon variant={variant} className="size-7" />}
       </div>
-      <p className="mt-3 text-display tabular-nums">{value}</p>
+      <p className="mt-3 text-display tabular-nums wrap-anywhere">{value}</p>
       {hint && <p className="mt-1 text-small text-text-muted">{hint}</p>}
       <span className="mt-auto inline-flex items-center gap-1 pt-4 text-small font-semibold text-primary group-hover:underline">
         View list

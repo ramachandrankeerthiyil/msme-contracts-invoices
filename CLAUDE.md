@@ -51,7 +51,7 @@ docker compose run --rm --build invoice-service ruff check .
 docker compose --profile dev up frontend-dev         # Vite hot reload → http://localhost:5173
 docker compose run --rm frontend-dev npm test        # unit tests (Vitest)
 docker compose run --rm frontend-dev npm run lint    # ESLint + design-token check
-docker compose --profile e2e run --rm e2e            # Playwright e2e + axe, against :8080 stack
+scripts/e2e.sh                                       # regenerate samples, start stack, Playwright + axe
 
 # Demo data (dates relative to today) → samples/
 docker run --rm -u "$(id -u):$(id -g)" -e HOME=/tmp -v "$PWD":/work -w /work python:3.12-slim \

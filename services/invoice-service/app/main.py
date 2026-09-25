@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
-from app.api import api_router
+from app.api import api_routers
 from app.config import Settings, get_settings
 from app.core import health, metrics
 from app.core.access_log import AccessLogMiddleware
@@ -50,7 +50,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     register_error_handlers(app)
     app.include_router(health.router)
     app.include_router(metrics.router)
-    app.include_router(api_router, prefix=settings.api_prefix)
+    for router in api_routers:
+        app.include_router(router, prefix=settings.api_prefix)
 
     # Added innermost first: the last one added wraps all the others.
     app.add_middleware(UnhandledErrorMiddleware)

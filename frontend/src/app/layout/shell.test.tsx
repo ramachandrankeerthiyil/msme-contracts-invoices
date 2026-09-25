@@ -2,7 +2,9 @@ import { QueryClientProvider } from '@tanstack/react-query'
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { createMemoryRouter, RouterProvider } from 'react-router'
-import { describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+
+import { EMPTY_PAGE } from '@/modules/invoices/testData'
 
 import { createQueryClient } from '../queryClient'
 import { routes } from '../router'
@@ -16,6 +18,24 @@ function renderAt(path: string) {
   )
   return router
 }
+
+// Pages now load data; answer every API call as an empty system.
+beforeEach(() => {
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(async (url: string) => {
+      const body = url.includes('/dashboard')
+        ? { today: '2026-09-25', has_data: false }
+        : url.includes('/uploads')
+          ? { items: [], total: 0, page: 1, page_size: 5 }
+          : EMPTY_PAGE
+      return new Response(JSON.stringify(body), { headers: { 'Content-Type': 'application/json' } })
+    }),
+  )
+})
+afterEach(() => {
+  vi.unstubAllGlobals()
+})
 
 function mainNav() {
   return screen.getByRole('navigation', { name: 'Main' })
