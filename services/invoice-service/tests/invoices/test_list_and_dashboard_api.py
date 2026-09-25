@@ -226,6 +226,21 @@ def test_INV_002_AC9_export_matches_the_current_view(sample):
     assert rows[1][6:] == ("Outstanding", "41 days overdue", "New")
 
 
+def test_PLT_002_AC7_prefixed_routes_get_full_templates_in_metrics(sample):
+    from app.core.metrics import REGISTRY
+
+    def count(route):
+        labels = {"method": "GET", "route": route, "status": "200"}
+        return REGISTRY.get_sample_value("http_requests_total", labels) or 0.0
+
+    before_list, before_dash = count("/api/invoices"), count("/api/invoices/dashboard")
+    sample.get("/api/invoices")
+    sample.get("/api/invoices/dashboard")
+
+    assert count("/api/invoices") == before_list + 1
+    assert count("/api/invoices/dashboard") == before_dash + 1
+
+
 def test_INV_002_empty_database(client):
     body = get_list(client)
 

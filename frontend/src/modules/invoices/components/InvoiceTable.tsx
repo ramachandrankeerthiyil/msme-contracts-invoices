@@ -1,7 +1,5 @@
-import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-react'
-
 import { StatusBadge } from '@/components/common/StatusBadge'
-import { Table, TBody, Td, Th, THead, Tr } from '@/components/ui/table'
+import { SortableTh, Table, TBody, Td, Th, THead, Tr } from '@/components/ui/table'
 import { formatDate, formatINR } from '@/lib/format'
 import { cn } from '@/lib/utils'
 
@@ -37,13 +35,13 @@ export function InvoiceTable({ items, query, onSort, stale }: InvoiceTableProps)
           <Tr>
             {COLUMNS.map((column) =>
               column.key ? (
-                <SortableHeader
+                <SortableTh
                   key={column.key}
                   label={column.label}
-                  sortKey={column.key}
                   numeric={column.numeric}
-                  query={query}
-                  onSort={onSort}
+                  active={query.sort === column.key}
+                  ascending={query.order === 'asc'}
+                  onSort={() => onSort(column.key as SortKey)}
                 />
               ) : (
                 <Th key={column.label}>{column.label}</Th>
@@ -81,34 +79,5 @@ export function InvoiceTable({ items, query, onSort, stale }: InvoiceTableProps)
         </TBody>
       </Table>
     </div>
-  )
-}
-
-interface SortableHeaderProps {
-  label: string
-  sortKey: SortKey
-  numeric?: boolean
-  query: InvoiceQuery
-  onSort: (key: SortKey) => void
-}
-
-function SortableHeader({ label, sortKey, numeric, query, onSort }: SortableHeaderProps) {
-  const active = query.sort === sortKey
-  const ascending = query.order === 'asc'
-  const Icon = !active ? ArrowUpDown : ascending ? ArrowUp : ArrowDown
-  return (
-    <Th numeric={numeric} aria-sort={active ? (ascending ? 'ascending' : 'descending') : 'none'}>
-      <button
-        type="button"
-        onClick={() => onSort(sortKey)}
-        className={cn(
-          'inline-flex min-h-11 items-center gap-1.5 rounded-md font-semibold hover:underline',
-          numeric && 'flex-row-reverse',
-        )}
-      >
-        {label}
-        <Icon aria-hidden className={cn('size-4', !active && 'text-text-muted')} />
-      </button>
-    </Th>
   )
 }

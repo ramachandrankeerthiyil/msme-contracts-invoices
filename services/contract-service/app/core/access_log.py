@@ -13,9 +13,18 @@ QUIET_PATHS = frozenset({"/health", "/ready", "/metrics"})
 
 
 def route_template(scope: Scope) -> str:
-    """The matched route's template (e.g. /api/<module>/{id}), to keep labels low-cardinality."""
-    route = scope.get("route")
-    return getattr(route, "path", None) or "unmatched"
+    """The matched route's template (e.g. /api/<module>/{id}), to keep labels low-cardinality.
+
+    Built from the request path by putting path parameters back as `{name}`. The matched route
+    object alone isn't enough: routers included with a prefix only know their own relative path.
+    """
+    if scope.get("route") is None:
+        return "unmatched"
+    names = {str(value): name for name, value in (scope.get("path_params") or {}).items()}
+    return "/".join(
+        f"{{{names[segment]}}}" if segment in names else segment
+        for segment in scope["path"].split("/")
+    )
 
 
 class AccessLogMiddleware:

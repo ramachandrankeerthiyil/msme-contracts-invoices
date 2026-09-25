@@ -57,4 +57,4 @@ Branch: `feat/PLT-001-app-shell` (start after PLT-002 has merged, so the gateway
   (shell + a11y + ≥16px text), sidebar, Home links, deep links + Back, the mobile menu at 800px,
   keyboard-only navigation, not found, and the shell with the API returning 503.
 - AC5 is partial by design: Home shows empty states until CON-003 / INV-003 wire in the KPIs.
-  Update 2026-09-25: the invoice section now shows the INV-003 KPIs; contracts await CON-003.
+  Update 2026-09-25: Home now shows both modules' KPIs (INV-003, CON-003). AC5 complete.

@@ -1,3 +1,4 @@
+import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-react'
 import type { ReactNode, TdHTMLAttributes, ThHTMLAttributes } from 'react'
 
 import { cn } from '@/lib/utils'
@@ -44,4 +45,32 @@ export function Th({ numeric, className, ...props }: CellProps & ThHTMLAttribute
 
 export function Td({ numeric, className, ...props }: CellProps & TdHTMLAttributes<HTMLTableCellElement>) {
   return <td className={cn('h-14 px-4 py-2', numeric && 'text-right tabular-nums', className)} {...props} />
+}
+
+interface SortableThProps {
+  label: string
+  active: boolean
+  ascending: boolean
+  onSort: () => void
+  numeric?: boolean
+}
+
+/** A column header that sorts: a real button, `aria-sort`, and a visible direction arrow. */
+export function SortableTh({ label, active, ascending, onSort, numeric }: SortableThProps) {
+  const Icon = !active ? ArrowUpDown : ascending ? ArrowUp : ArrowDown
+  return (
+    <Th numeric={numeric} aria-sort={active ? (ascending ? 'ascending' : 'descending') : 'none'}>
+      <button
+        type="button"
+        onClick={onSort}
+        className={cn(
+          'inline-flex min-h-11 items-center gap-1.5 rounded-md font-semibold hover:underline',
+          numeric && 'flex-row-reverse',
+        )}
+      >
+        {label}
+        <Icon aria-hidden className={cn('size-4', !active && 'text-text-muted')} />
+      </button>
+    </Th>
+  )
 }

@@ -1,10 +1,9 @@
-import { ArrowRight, FileText, ReceiptIndianRupee, Upload, type LucideIcon } from 'lucide-react'
+import { ArrowRight, FileText, ReceiptIndianRupee, type LucideIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { Link } from 'react-router'
 
 import { PageHeader } from '@/app/layout/PageHeader'
-import { EmptyState } from '@/components/common/EmptyState'
-import { ButtonLink } from '@/components/ui/button'
+import { ContractsOverview } from '@/modules/contracts/components/ContractsOverview'
 import { InvoicesOverview } from '@/modules/invoices/components/InvoicesOverview'
 
 interface HomeSection {
@@ -21,20 +20,7 @@ const SECTIONS: HomeSection[] = [
     title: 'Contracts',
     icon: FileText,
     dashboard: { label: 'Go to contract dashboard', to: '/contracts/dashboard' },
-    // Headline contract numbers arrive with the contract dashboard (CON-003).
-    content: (
-      <EmptyState
-        icon={FileText}
-        title="No contracts yet"
-        description="Upload a contract and we will pick out the parties, key dates, terms and risks for you."
-        action={
-          <ButtonLink to="/contracts/upload">
-            <Upload aria-hidden />
-            Upload contract
-          </ButtonLink>
-        }
-      />
-    ),
+    content: <ContractsOverview />,
   },
   {
     id: 'invoices',

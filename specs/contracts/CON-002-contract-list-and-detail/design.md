@@ -1,7 +1,7 @@
 ---
 id: CON-002
 title: Contract list and detail — design
-status: approved
+status: implemented
 requirements: ./requirements.md
 ---
 
@@ -156,3 +156,9 @@ frontend/src/modules/contracts/
 | AC5–AC7 | API: detail ordering (dates by date, risks high → low, terms by category). Vitest: sections, quotes, unverified note, AI notice, download link. |
 | AC8 | Vitest: processing card polls and swaps to content; failed shows the message + Try again. Playwright with the fake extractor. |
 | AC9 | Vitest + API: empty states |
+
+## As built (2026-09-25)
+
+- **Sort by status:** ties are broken by the soonest end date (like the invoice list).
+- **Shared UI parts:** `FilterTabs`, `SearchField`, `SortableTh` and `StatusBars` were extracted
+  into `components/` and are now used by both the invoice and contract lists.

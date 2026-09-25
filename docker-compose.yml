@@ -58,6 +58,8 @@ services:
       DB_PASSWORD: ${CONTRACT_DB_PASSWORD}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
       CONTRACT_LLM_MODEL: ${CONTRACT_LLM_MODEL:-claude-sonnet-5}
+      CONTRACT_LLM_EFFORT: ${CONTRACT_LLM_EFFORT:-high}
+      CONTRACT_EXTRACTOR: ${CONTRACT_EXTRACTOR:-claude}
       CONTRACT_AT_RISK_DAYS: ${CONTRACT_AT_RISK_DAYS:-3}
     volumes:
       - uploads:/data/uploads

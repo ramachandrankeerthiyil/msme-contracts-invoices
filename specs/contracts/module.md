@@ -16,9 +16,9 @@ dashboard. Independent of the Invoices module.
 
 | ID | Feature | Status |
 |---|---|---|
-| CON-001 | Upload & AI extraction | requirements approved |
-| CON-002 | Contract list & detail | requirements approved |
-| CON-003 | Contract dashboard | requirements approved |
+| CON-001 | Upload & AI extraction | implemented |
+| CON-002 | Contract list & detail | implemented |
+| CON-003 | Contract dashboard | implemented |
 
 ## Accepted files
 

@@ -24,6 +24,10 @@ beforeEach(() => {
   vi.stubGlobal(
     'fetch',
     vi.fn(async (url: string) => {
+      if (/\/api\/contracts\/(?!dashboard)[^/?]+$/.test(url)) {
+        const error = { error: { code: 'NOT_FOUND', message: "We couldn't find that contract." } }
+        return new Response(JSON.stringify(error), { status: 404 })
+      }
       const body = url.includes('/dashboard')
         ? { today: '2026-09-25', has_data: false }
         : url.includes('/uploads')

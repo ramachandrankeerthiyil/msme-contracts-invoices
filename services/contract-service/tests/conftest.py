@@ -39,8 +39,10 @@ async def _execute(settings: Settings, *statements: str) -> None:
 
 @pytest.fixture(scope="session")
 def settings() -> Settings:
-    # A dummy key so readiness passes; tests never call the real Claude API.
-    return get_settings().model_copy(update={"anthropic_api_key": SecretStr("test-key")})
+    # Tests never call the real Claude API: the fake extractor, plus a dummy key for readiness.
+    return get_settings().model_copy(
+        update={"anthropic_api_key": SecretStr("test-key"), "contract_extractor": "fake"}
+    )
 
 
 @pytest.fixture(scope="session", autouse=True)
