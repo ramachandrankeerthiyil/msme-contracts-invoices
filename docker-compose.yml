@@ -70,6 +70,27 @@ services:
       <<: *service-healthcheck
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8001/health', timeout=2)"]
 
+  # "Talk to Me" (AST-001): stateless, no database; reads the other two services' APIs.
+  assistant-service:
+    build: ./services/assistant-service
+    environment:
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      APP_TIMEZONE: ${APP_TIMEZONE:-Asia/Kolkata}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      ASSISTANT_LLM: ${ASSISTANT_LLM:-claude}
+      ASSISTANT_LLM_MODEL: ${ASSISTANT_LLM_MODEL:-claude-sonnet-5}
+      ASSISTANT_LLM_EFFORT: ${ASSISTANT_LLM_EFFORT:-medium}
+      INVOICE_API_URL: http://invoice-service:8002
+      CONTRACT_API_URL: http://contract-service:8001
+    depends_on:
+      invoice-service:
+        condition: service_healthy
+      contract-service:
+        condition: service_healthy
+    healthcheck:
+      <<: *service-healthcheck
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8003/health', timeout=2)"]
+
   # React build served by Nginx (PLT-001).
   frontend:
     build: ./frontend
@@ -122,6 +143,8 @@ services:
         condition: service_healthy
       contract-service:
         condition: service_healthy
+      assistant-service:
+        condition: service_healthy
       frontend:
         condition: service_started
     healthcheck:
@@ -137,7 +160,7 @@ services:
       - ./observability/prometheus.yml:/etc/prometheus/prometheus.yml:ro
     ports:
       - "127.0.0.1:9090:9090"
-    depends_on: [invoice-service, contract-service]
+    depends_on: [invoice-service, contract-service, assistant-service]
 
   grafana:
     image: grafana/grafana:11.3.0

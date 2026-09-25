@@ -10,3 +10,7 @@ scrape_configs:
   - job_name: contract-service
     static_configs:
       - targets: ["contract-service:8001"]
+
+  - job_name: assistant-service
+    static_configs:
+      - targets: ["assistant-service:8003"]

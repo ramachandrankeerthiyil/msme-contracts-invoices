@@ -11,23 +11,23 @@ Branch: `feat/AST-001-conversational-assistant` (the pre-assistant version is ta
 
 ## A. Service foundation
 
-- [ ] 1. `services/assistant-service` skeleton (copy of the service template; `app/core`
+- [x] 1. `services/assistant-service` skeleton (copy of the service template; `app/core`
        identical; no DB/migrations); compose service (8003), gateway route with buffering off,
        Prometheus target, `/ready` checks (key, downstream health) — _AC12, AC14_
-- [ ] 2. Settings + `.env.example` (`ASSISTANT_LLM`, `ASSISTANT_LLM_MODEL`, `ASSISTANT_LLM_EFFORT`,
+- [x] 2. Settings + `.env.example` (`ASSISTANT_LLM`, `ASSISTANT_LLM_MODEL`, `ASSISTANT_LLM_EFFORT`,
        downstream URLs)
 
 ## B. Assistant core
 
-- [ ] 3. `tools.py`: five read-only tools (strict schemas), httpx client with X-Request-ID,
+- [x] 3. `tools.py`: five read-only tools (strict schemas), httpx client with X-Request-ID,
        trimmed results with app links, fixed status labels, `is_error` on failures — _AC5–AC7_
-- [ ] 4. `prompt.py` (system prompt + today) — _AC5, AC9, AC10_
-- [ ] 5. `claude.py` streaming step; `loop.py` (≤ 8 lookups, parallel tool calls, final answer
+- [x] 4. `prompt.py` (system prompt + today) — _AC5, AC9, AC10_
+- [x] 5. `claude.py` streaming step; `loop.py` (≤ 8 lookups, parallel tool calls, final answer
        when the limit is hit, cancellation) — _AC4, AC5, AC15_
-- [ ] 6. `chat.py`: request validation, SSE events, error mapping, disconnect → cancel — _AC4, AC12_
-- [ ] 7. `fake.py` deterministic stand-in model using the real tools — (tests/e2e)
-- [ ] 8. Logs + metrics without question/answer text — _AC14_
-- [ ] 9. Tests: scripted-Claude loop, tools against mocked APIs, SSE sequence, errors, limits,
+- [x] 6. `chat.py`: request validation, SSE events, error mapping, disconnect → cancel — _AC4, AC12_
+- [x] 7. `fake.py` deterministic stand-in model using the real tools — (tests/e2e)
+- [x] 8. Logs + metrics without question/answer text — _AC14_
+- [x] 9. Tests: scripted-Claude loop, tools against mocked APIs, SSE sequence, errors, limits,
        log privacy; opt-in live eval (`-m llm`) with golden questions — _AC4–AC15_
 
 ## C. Frontend

@@ -44,6 +44,7 @@ Validation (422 `VALIDATION_ERROR`):
 |---|---|---|
 | `status` | `{"id": "t1", "state": "running", "label": "Checking unpaid invoices"}` | A lookup started (AC6) |
 | `status` | `{"id": "t1", "state": "done", "label": "Checked unpaid invoices", "count": 9}` | A lookup finished, with how many records it found |
+| `status` | `{"id": "t1", "state": "failed", "label": "Couldn't check unpaid invoices"}` | A lookup failed (service down, unknown id); the answer continues without it |
 | `text` | `{"delta": "You have 9 invoices…"}` | The next piece of the answer (AC4) |
 | `done` | `{"stop_reason": "end_turn"}` | The answer is complete |
 | `error` | `{"code": "ASSISTANT_FAILED", "message": "…", "request_id": "…"}` | A plain-language failure (AC12); the stream then ends |
@@ -169,7 +170,9 @@ Ask questions about your contracts and invoices in plain English.
 | `assistant_chat.completed` | `steps`, `tools` (names), `input_tokens`, `output_tokens`, `cache_read_tokens`, `duration_ms`, `first_text_ms`, `stop_reason` |
 | `assistant_chat.failed` / `.cancelled` | `reason` / `steps` |
 
-Question and answer text is never logged. Metrics: `assistant_chats_total{result}`,
+Question and answer text is never logged. HTTP client libraries (`httpx`, `httpcore`) log at
+WARNING only, because their request lines include query strings with the model's search text
+(shared `app/core/logging.py`, so all services). Metrics: `assistant_chats_total{result}`,
 `assistant_tool_calls_total{tool,ok}`, `assistant_first_text_seconds`, and
 `llm_tokens_total{model,direction}`.
 
