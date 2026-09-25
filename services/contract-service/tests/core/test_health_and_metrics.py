@@ -41,7 +41,9 @@ def test_PLT_002_AC6_not_ready_when_database_is_unreachable(settings):
 
 
 def test_PLT_002_AC6_not_ready_without_claude_api_key(settings):
-    no_key = settings.model_copy(update={"anthropic_api_key": SecretStr("")})
+    no_key = settings.model_copy(
+        update={"anthropic_api_key": SecretStr(""), "contract_extractor": "claude"}
+    )
 
     with TestClient(create_app(no_key)) as client:
         response = client.get("/ready")

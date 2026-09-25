@@ -1,12 +1,15 @@
 import { FileText, LayoutDashboard, Upload } from 'lucide-react'
 
 import type { Crumb, ModuleDefinition, PageAction } from '@/app/types'
-import { ComingSoonPage } from '@/pages/ComingSoonPage'
+
+import { ContractDashboardPage } from './pages/ContractDashboardPage'
+import { ContractDetailPage } from './pages/ContractDetailPage'
+import { ContractsPage } from './pages/ContractsPage'
+import { UploadContractPage } from './pages/UploadContractPage'
 
 const parents: Crumb[] = [{ label: 'Contracts', to: '/contracts/dashboard' }]
 const uploadAction: PageAction = { label: 'Upload contract', to: '/contracts/upload', icon: Upload }
 
-// Pages are ComingSoon placeholders until CON-001 … CON-003 deliver them.
 export const contractsModule: ModuleDefinition = {
   id: 'contracts',
   label: 'Contracts',
@@ -21,22 +24,22 @@ export const contractsModule: ModuleDefinition = {
       children: [
         {
           index: true,
-          element: <ComingSoonPage />,
+          element: <ContractsPage />,
           handle: { title: 'All contracts', crumb: 'All contracts', parents, action: uploadAction },
         },
         {
           path: 'dashboard',
-          element: <ComingSoonPage />,
+          element: <ContractDashboardPage />,
           handle: { title: 'Contract dashboard', crumb: 'Dashboard', parents, action: uploadAction },
         },
         {
           path: 'upload',
-          element: <ComingSoonPage />,
+          element: <UploadContractPage />,
           handle: { title: 'Upload contract', crumb: 'Upload', parents },
         },
         {
           path: ':contractId',
-          element: <ComingSoonPage />,
+          element: <ContractDetailPage />,
           handle: {
             title: 'Contract details',
             crumb: 'Contract details',

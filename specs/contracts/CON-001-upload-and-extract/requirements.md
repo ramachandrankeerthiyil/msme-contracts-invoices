@@ -1,7 +1,7 @@
 ---
 id: CON-001
 title: Contract upload and AI extraction
-status: approved
+status: implemented
 depends_on: [CONTRACTS, PLT-001, PLT-002, ADR-0002]
 ---
 

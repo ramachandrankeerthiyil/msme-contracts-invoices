@@ -1,4 +1,5 @@
 from functools import lru_cache
+from typing import Literal
 
 from pydantic import SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -26,6 +27,11 @@ class Settings(BaseSettings):
 
     anthropic_api_key: SecretStr = SecretStr("")
     contract_llm_model: str = "claude-sonnet-5"
+    contract_llm_effort: Literal["low", "medium", "high", "xhigh", "max"] = "high"
+    # "claude" in real use; "fake" gives deterministic results without the API (tests, e2e).
+    contract_extractor: Literal["claude", "fake"] = "claude"
+    # How many contracts are read at the same time.
+    contract_max_concurrent: int = 2
 
     @property
     def database_url(self) -> URL:

@@ -51,7 +51,10 @@ docker compose run --rm --build invoice-service ruff check .
 docker compose --profile dev up frontend-dev         # Vite hot reload → http://localhost:5173
 docker compose run --rm frontend-dev npm test        # unit tests (Vitest)
 docker compose run --rm frontend-dev npm run lint    # ESLint + design-token check
-scripts/e2e.sh                                       # regenerate samples, start stack, Playwright + axe
+scripts/e2e.sh                                       # samples + stack (stand-in AI) + Playwright + axe
+
+# Opt-in live check of contract reading with the real Claude API (costs a few rupees)
+docker compose run --rm -e RUN_LLM_TESTS=1 -v "$PWD/samples:/samples:ro" contract-service pytest -m llm -s
 
 # Demo data (dates relative to today) → samples/
 docker run --rm -u "$(id -u):$(id -g)" -e HOME=/tmp -v "$PWD":/work -w /work python:3.12-slim \
@@ -64,6 +67,8 @@ docker compose run --rm invoice-service alembic revision --autogenerate -m "desc
 - Service API docs: `http://localhost:8080/api/invoices/docs`, `…/api/contracts/docs`.
 - `/health`, `/ready`, `/metrics` are internal only (not routed by the gateway).
 - `app/core/` is intentionally duplicated in both services — change both copies together.
+- Contract reading: `CONTRACT_EXTRACTOR=claude` (default) or `fake` (tests/e2e, no API calls).
+  Automated tests must never call the real API; `scripts/e2e.sh` enforces this.
 - Frontend: new pages plug in via the module registry (`frontend/src/app/modules.ts`) and route
   `handle` (title, crumb, parents, action). Only `src/styles/tokens.css` may contain raw colours
   or px sizes (`scripts/check-tokens.mjs` enforces this).

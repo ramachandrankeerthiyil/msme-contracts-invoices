@@ -1,7 +1,7 @@
 ---
 id: CON-001
 title: Contract upload and AI extraction — design
-status: approved
+status: implemented
 requirements: ./requirements.md
 ---
 
@@ -228,3 +228,20 @@ dashboard.
 
 `CONTRACT_EXTRACTOR=fake` is a test-only setting that selects a deterministic extractor producing
 plausible data from the document text. It lets e2e tests run without an API key or cost.
+
+## As built (2026-09-25)
+
+- **Interrupted work:** at startup *every* contract still in progress is marked failed ("Reading
+  was interrupted"). The service is a single process, so anything in progress at startup was
+  interrupted. This replaces the 15-minute rule.
+- **A contract removed mid-read** (only possible via database clean-up) is logged as
+  `contract_extraction.discarded` and skipped, not treated as an error.
+- **Malformed contract ids** in links return the friendly 404, not a validation error.
+- **Extraction runs as an asyncio task,** not a FastAPI BackgroundTask, so request logs and
+  metrics are not held open for the ~30 s reading time.
+- **E2E safety:** `scripts/e2e.sh` runs the stack with `CONTRACT_EXTRACTOR=fake`, aborts if the
+  stand-in is not active, removes its `e2e-` contracts and switches back to Claude afterwards.
+  Test PDFs are generated per test, so duplicates never interfere.
+- **Metrics labels (PLT-002 fix):** FastAPI 0.141 no longer exposes the full route path for
+  prefixed routers, so the route template is rebuilt from the path and its parameters (both
+  services).

@@ -62,7 +62,7 @@ def test_PLT_002_AC3_one_access_line_per_request(client, logs):
 
 
 def test_PLT_002_AC3_client_errors_are_logged_as_warnings(client, logs):
-    client.get("/api/contracts/does-not-exist")
+    client.get("/api/contracts/no/such/route")
 
     line = _access_lines(logs())[0]
     assert line["status"] == 404

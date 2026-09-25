@@ -8,7 +8,7 @@ const ROUTES: { path: string; title: string; activeNav?: string; breadcrumb: boo
   { path: '/contracts/dashboard', title: 'Contract dashboard', activeNav: 'Dashboard', breadcrumb: true },
   { path: '/contracts', title: 'All contracts', activeNav: 'All contracts', breadcrumb: true },
   { path: '/contracts/upload', title: 'Upload contract', activeNav: 'Upload contract', breadcrumb: true },
-  { path: '/contracts/some-id', title: 'Contract details', activeNav: 'All contracts', breadcrumb: true },
+  { path: '/contracts/some-id', title: 'Contract not found', activeNav: 'All contracts', breadcrumb: true },
   { path: '/invoices/dashboard', title: 'Invoice dashboard', activeNav: 'Dashboard', breadcrumb: true },
   { path: '/invoices', title: 'All invoices', activeNav: 'All invoices', breadcrumb: true },
   { path: '/invoices/upload', title: 'Upload invoices', activeNav: 'Upload invoices', breadcrumb: true },

@@ -1,7 +1,7 @@
 ---
 id: CON-003
 title: Contract dashboard — design
-status: approved
+status: implemented
 requirements: ./requirements.md
 ---
 

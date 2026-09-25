@@ -1,7 +1,7 @@
 ---
 id: CON-003
 title: Contract dashboard
-status: approved
+status: implemented
 depends_on: [CON-002]
 ---
 
