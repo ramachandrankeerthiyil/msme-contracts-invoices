@@ -97,6 +97,11 @@ Mutually exclusive. Every completed contract has exactly one.
 | **Not yet started** | `start_date > today` | Neutral |
 | **No end date** | `end_date` is null and the contract has started | Info |
 
+Contracts not yet read are shown as **Being read** (uploaded / extracting_text / analysing) or
+**Could not be read** (failed). They are outside the lifecycle statuses and the dashboard totals.
+The list's **All** view means all *read* contracts, so it equals the dashboard's Total contracts.
+Full column list: CON-001 design, "Data".
+
 ### Contract at risk
 
 A flag shown **on top of** the lifecycle status. A contract is **at risk** when **either**
