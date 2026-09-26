@@ -6,7 +6,7 @@ export const SERVICE_UNAVAILABLE_MESSAGE =
 export const GENERIC_ERROR_MESSAGE = 'Something went wrong. Please try again.'
 
 const UNAVAILABLE_STATUSES = new Set([502, 503, 504])
-const REFERENCE_CODES = new Set(['INTERNAL_ERROR', 'SERVICE_UNAVAILABLE'])
+const REFERENCE_CODES = new Set(['INTERNAL_ERROR', 'SERVICE_UNAVAILABLE', 'ASSISTANT_FAILED'])
 
 export class ApiError extends Error {
   readonly status: number

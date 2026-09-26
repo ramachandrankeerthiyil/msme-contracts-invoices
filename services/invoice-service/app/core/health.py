@@ -44,7 +44,9 @@ def health(request: Request) -> dict[str, str]:
 @router.get("/ready")
 async def ready(request: Request) -> JSONResponse:
     app = request.app
-    checks: dict[str, ReadyCheck] = {"database": check_database, **app.state.ready_checks}
+    # Services without a database (assistant-service) have no engine and skip that check.
+    database = {"database": check_database} if getattr(app.state, "engine", None) else {}
+    checks: dict[str, ReadyCheck] = {**database, **app.state.ready_checks}
     results = {name: "ok" if await check(app) else "fail" for name, check in checks.items()}
     is_ready = all(result == "ok" for result in results.values())
     return JSONResponse(

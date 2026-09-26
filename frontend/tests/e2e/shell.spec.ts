@@ -12,6 +12,7 @@ const ROUTES: { path: string; title: string; activeNav?: string; breadcrumb: boo
   { path: '/invoices/dashboard', title: 'Invoice dashboard', activeNav: 'Dashboard', breadcrumb: true },
   { path: '/invoices', title: 'All invoices', activeNav: 'All invoices', breadcrumb: true },
   { path: '/invoices/upload', title: 'Upload invoices', activeNav: 'Upload invoices', breadcrumb: true },
+  { path: '/assistant', title: 'Talk to Me', activeNav: 'Talk to Me', breadcrumb: true },
   { path: '/no/such/page', title: 'Page not found', breadcrumb: false },
 ]
 
@@ -75,6 +76,7 @@ test('PLT_001_AC2 sidebar groups with icons and labels', async ({ page }) => {
     'All invoices',
     'Upload invoices',
   ])
+  await expect(nav.getByRole('list', { name: 'Assistant' }).getByRole('link')).toHaveText(['Talk to Me'])
   for (const link of await nav.getByRole('link').all()) {
     await expect(link.locator('svg')).toHaveCount(1)
   }

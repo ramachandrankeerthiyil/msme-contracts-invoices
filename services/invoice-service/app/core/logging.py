@@ -102,6 +102,11 @@ def configure_logging(service: str, level: str = "INFO", stream: IO[str] | None 
         lib_logger.propagate = True
     logging.getLogger("uvicorn.access").disabled = True
 
+    # HTTP clients log every request URL at INFO. URLs can carry user search text (AST-001
+    # AC14), and our own events already record each call, so keep only their warnings.
+    for name in ("httpx", "httpx2", "httpcore"):
+        logging.getLogger(name).setLevel(max(logging.WARNING, root.level))
+
 
 def get_logger(name: str | None = None) -> structlog.stdlib.BoundLogger:
     return structlog.stdlib.get_logger(name)

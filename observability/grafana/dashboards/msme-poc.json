@@ -117,8 +117,47 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "sum by (model, direction) (increase(llm_tokens_total[1h]))",
-          "legendFormat": "{{model}} {{direction}}"
+          "expr": "sum by (job, model, direction) (increase(llm_tokens_total[1h]))",
+          "legendFormat": "{{job}} {{model}} {{direction}}"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "type": "timeseries",
+      "title": "Talk to Me: questions and lookups (per hour)",
+      "gridPos": { "x": 0, "y": 32, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (result) (increase(assistant_chats_total[1h]))",
+          "legendFormat": "questions {{result}}"
+        },
+        {
+          "refId": "B",
+          "expr": "sum by (tool, ok) (increase(assistant_tool_calls_total[1h]))",
+          "legendFormat": "{{tool}} ok={{ok}}"
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "type": "timeseries",
+      "title": "Talk to Me: time to first words (p50 / p95)",
+      "gridPos": { "x": 12, "y": 32, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "unit": "s" }, "overrides": [] },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "histogram_quantile(0.5, sum by (le) (rate(assistant_first_text_seconds_bucket[1h])))",
+          "legendFormat": "p50"
+        },
+        {
+          "refId": "B",
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(assistant_first_text_seconds_bucket[1h])))",
+          "legendFormat": "p95"
         }
       ]
     }
