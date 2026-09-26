@@ -45,7 +45,7 @@ Branch: `feat/AST-001-conversational-assistant` (the pre-assistant version is ta
 
 - [x] 15. `scripts/e2e.sh`: assistant in fake mode + safety check; Playwright spec (suggestion →
         answer with links → follow-up → Stop → New conversation; axe; phone width).
-- [ ] 16. Live eval with the real model on the sample data; screenshots; update the Grafana
-        dashboard.
+- [x] 16. Grafana dashboard updated. Live eval with the real model and screenshots were
+        skipped by the product owner (2026-09-26); `pytest -m llm` remains available.
 - [x] 17. Docs (README, CLAUDE.md, architecture.md, product.md); set statuses `implemented`; on
         approval merge to `main` and tag `v1.1-assistant`.
