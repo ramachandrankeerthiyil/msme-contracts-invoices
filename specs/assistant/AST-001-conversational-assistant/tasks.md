@@ -1,7 +1,7 @@
 ---
 id: AST-001
 title: Conversational AI assistant — tasks
-status: approved
+status: implemented
 design: ./design.md
 ---
 
@@ -47,5 +47,5 @@ Branch: `feat/AST-001-conversational-assistant` (the pre-assistant version is ta
         answer with links → follow-up → Stop → New conversation; axe; phone width).
 - [ ] 16. Live eval with the real model on the sample data; screenshots; update the Grafana
         dashboard.
-- [ ] 17. Docs (README, CLAUDE.md, architecture.md, product.md); set statuses `implemented`; on
+- [x] 17. Docs (README, CLAUDE.md, architecture.md, product.md); set statuses `implemented`; on
         approval merge to `main` and tag `v1.1-assistant`.

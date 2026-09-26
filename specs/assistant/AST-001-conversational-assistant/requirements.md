@@ -1,7 +1,7 @@
 ---
 id: AST-001
 title: Conversational AI assistant ("Talk to Me")
-status: approved
+status: implemented
 depends_on: [PLT-001, PLT-002, INV-002, INV-003, CON-002, CON-003, ADR-0003]
 ---
 

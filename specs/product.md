@@ -31,9 +31,11 @@ immediately sees **what needs attention this week**.
 |---|---|
 | Contracts | Upload a PDF or Word contract; extract parties, key dates, terms and risks; store them in PostgreSQL; list/detail view; dashboard |
 | Invoices | Upload an Excel invoice sheet; create or update invoices; flag outstanding and at-risk invoices; list view; dashboard |
+| Assistant | "Talk to Me": ask questions about contracts and invoices in plain English; answers use only the user's data and link to each record (read-only) |
 | Platform | Professional, consistent app shell and navigation; logging and observability |
 
-The Contracts and Invoices modules are **fully independent** of each other.
+The Contracts and Invoices modules are **fully independent** of each other. The Assistant reads
+from both but changes nothing (ADR-0003).
 
 ### Out of scope (POC)
 

@@ -1,7 +1,7 @@
 ---
 id: AST-001
 title: Conversational AI assistant — design
-status: approved
+status: implemented
 requirements: ./requirements.md
 ---
 

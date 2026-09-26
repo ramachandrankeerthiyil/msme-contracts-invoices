@@ -1,7 +1,7 @@
 ---
 id: ASSISTANT
 title: Assistant module
-status: approved
+status: implemented
 ---
 
 # Assistant module

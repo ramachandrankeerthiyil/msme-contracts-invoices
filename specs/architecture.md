@@ -15,11 +15,14 @@ A three-tier, API-driven architecture. It is a POC: optimise for clarity and sim
                  │    /                ──► frontend          (Nginx serving React build)   │  Tier 1
                  │    /api/contracts/* ──► contract-service  (FastAPI :8001) ─┐            │  Tier 2
                  │    /api/invoices/*  ──► invoice-service   (FastAPI :8002) ─┤            │
+                 │    /api/assistant/* ──► assistant-service (FastAPI :8003, no DB)        │
+                 │                           └─ read-only GETs to the two services above   │
                  │                                                            ▼            │
                  │                                      PostgreSQL 16  (schemas:           │  Tier 3
                  │                                       `contracts`, `invoices`)          │
                  │                                                                        │
                  │  contract-service ──HTTPS──► Claude API (contract extraction)          │
+                 │  assistant-service ─HTTPS──► Claude API (Talk to Me answers)          │
                  └────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -31,12 +34,15 @@ A three-tier, API-driven architecture. It is a POC: optimise for clarity and sim
 | — | `gateway/` Nginx | Single entry point, routing, request ID generation, upload size limits |
 | 2 — Business logic | `services/contract-service` | Contract upload, text extraction, AI extraction, status & risk rules, contract dashboard |
 | 2 — Business logic | `services/invoice-service` | Excel parsing & validation, create/update, status & risk rules, invoice dashboard |
+| 2 — Business logic | `services/assistant-service` | "Talk to Me": answers questions with Claude, using read-only lookups of the other two APIs. Stateless, no database (ADR-0003) |
 | 3 — Data | PostgreSQL | One schema per service. Uploaded files are stored on a Docker volume and referenced by path. |
 
 ## Service independence rules
 
 1. A service owns its schema. No service reads or writes another service's schema.
 2. Services never call each other. The contracts and invoices modules share nothing but the gateway.
+   **Exception (ADR-0003):** assistant-service may make read-only GET requests to the contract
+   and invoice services' public APIs. It never writes, and neither of them calls it.
 3. Each service has its own Alembic migrations, its own DB user and its own tests.
 4. Each service can be started, tested and demoed on its own.
 
@@ -88,5 +94,6 @@ readiness endpoints, Prometheus metrics, and an optional Prometheus + Grafana co
 There is no authentication, by design. Even so:
 - Validate file type by content (magic bytes), not only by extension; enforce size limits.
 - Never execute or render uploaded content as HTML.
-- Keep the Claude API key only in `.env`, and only in contract-service.
+- Keep the Claude API key only in `.env`, and only in contract-service and assistant-service.
+- Talk to Me renders answers as Markdown without raw HTML and allows only in-app links.
 - Do not log document contents or full extraction payloads at INFO level.

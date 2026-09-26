@@ -17,10 +17,13 @@ invoice spreadsheets (Excel), and see the results on two dashboards.
 ```
 Browser ──► gateway (Nginx) ──► frontend (React static build)
                              ├─► contract-service (FastAPI) ──► PostgreSQL schema `contracts`
-                             └─► invoice-service  (FastAPI) ──► PostgreSQL schema `invoices`
+                             ├─► invoice-service  (FastAPI) ──► PostgreSQL schema `invoices`
+                             └─► assistant-service (FastAPI, no DB) ──GET──► the two services above
 ```
 
-- The two services are independent: they never call each other or read each other's schema.
+- The two business services are independent: they never call each other or read each other's
+  schema. The only exception is assistant-service, which makes read-only GETs to their public
+  APIs (ADR-0003).
 - All business rules (statuses, risk flags, dashboard numbers) live in the services, not the UI.
 
 ## Conventions
@@ -53,8 +56,9 @@ docker compose run --rm frontend-dev npm test        # unit tests (Vitest)
 docker compose run --rm frontend-dev npm run lint    # ESLint + design-token check
 scripts/e2e.sh                                       # samples + stack (stand-in AI) + Playwright + axe
 
-# Opt-in live check of contract reading with the real Claude API (costs a few rupees)
+# Opt-in live checks with the real Claude API (cost a few rupees each)
 docker compose run --rm -e RUN_LLM_TESTS=1 -v "$PWD/samples:/samples:ro" contract-service pytest -m llm -s
+docker compose run --rm -e RUN_LLM_TESTS=1 assistant-service pytest -m llm -s   # needs demo data loaded
 
 # Demo data (dates relative to today) → samples/
 docker run --rm -u "$(id -u):$(id -g)" -e HOME=/tmp -v "$PWD":/work -w /work python:3.12-slim \
@@ -66,9 +70,13 @@ docker compose run --rm invoice-service alembic revision --autogenerate -m "desc
 
 - Service API docs: `http://localhost:8080/api/invoices/docs`, `…/api/contracts/docs`.
 - `/health`, `/ready`, `/metrics` are internal only (not routed by the gateway).
-- `app/core/` is intentionally duplicated in both services — change both copies together.
+- `app/core/` is intentionally duplicated in all three services — change every copy together.
 - Contract reading: `CONTRACT_EXTRACTOR=claude` (default) or `fake` (tests/e2e, no API calls).
-  Automated tests must never call the real API; `scripts/e2e.sh` enforces this.
+  Talk to Me: `ASSISTANT_LLM=claude` (default) or `fake` (scripted answers from real lookups).
+  Automated tests must never call the real API; `scripts/e2e.sh` enforces this for both.
+- Talk to Me never logs question or answer text (AST-001 AC14).
+- Versions: tag `v1.0-poc` = before the assistant; restore with
+  `git switch --create restore-v1.0 v1.0-poc`.
 - Frontend: new pages plug in via the module registry (`frontend/src/app/modules.ts`) and route
   `handle` (title, crumb, parents, action). Only `src/styles/tokens.css` may contain raw colours
   or px sizes (`scripts/check-tokens.mjs` enforces this).
