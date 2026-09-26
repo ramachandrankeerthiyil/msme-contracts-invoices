@@ -32,18 +32,18 @@ Branch: `feat/AST-001-conversational-assistant` (the pre-assistant version is ta
 
 ## C. Frontend
 
-- [ ] 10. `lib/api/sse.ts`: POST + streamed SSE parsing with AbortController
-- [ ] 11. `modules/assistant`: registry entry (ASSISTANT group, Talk to Me) + route — _AC1_
-- [ ] 12. `useConversation` (sessionStorage, send, stop, retry, new) — _AC4, AC8, AC12_
-- [ ] 13. Page: welcome + suggestions, message list (`role="log"`), lookups, Markdown answer
+- [x] 10. `lib/api/sse.ts`: POST + streamed SSE parsing with AbortController
+- [x] 11. `modules/assistant`: registry entry (ASSISTANT group, Talk to Me) + route — _AC1_
+- [x] 12. `useConversation` (sessionStorage, send, stop, retry, new) — _AC4, AC8, AC12_
+- [x] 13. Page: welcome + suggestions, message list (`role="log"`), lookups, Markdown answer
         (react-markdown + remark-gfm, in-app links only), Copy, sticky composer (auto-grow,
         Enter/Shift+Enter, counter, Send/Stop), disclaimer, live-region announcement,
         focus handling — _AC2–AC4, AC6, AC7, AC9, AC11, AC13, AC16_
-- [ ] 14. Vitest for the hook and page.
+- [x] 14. Vitest for the hook and page.
 
 ## D. Verify & release
 
-- [ ] 15. `scripts/e2e.sh`: assistant in fake mode + safety check; Playwright spec (suggestion →
+- [x] 15. `scripts/e2e.sh`: assistant in fake mode + safety check; Playwright spec (suggestion →
         answer with links → follow-up → Stop → New conversation; axe; phone width).
 - [ ] 16. Live eval with the real model on the sample data; screenshots; update the Grafana
         dashboard.
