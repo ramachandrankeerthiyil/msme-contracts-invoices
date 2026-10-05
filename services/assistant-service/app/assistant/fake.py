@@ -12,6 +12,7 @@ from collections.abc import AsyncIterator
 from datetime import date
 from typing import Any
 
+from app.assistant.app_guide import APP_SUMMARY
 from app.assistant.events import StepResult, ToolCall
 
 FAKE_MODEL = "fake"
@@ -28,7 +29,10 @@ class FakeModel:
         self, *, system: list[dict[str, Any]], tools: list[dict[str, Any]], messages: list[Any]
     ) -> AsyncIterator[str | StepResult]:
         question, calls, results = _current_turn(messages)
-        plan = _plan(question.lower(), calls, results)
+        if _classified_as_about_app(system):
+            plan = _about_app_answer()
+        else:
+            plan = _plan(question.lower(), calls, results)
         if isinstance(plan, tuple):
             name, tool_input = plan
             call = ToolCall(id=f"fake_{len(calls) + 1}", name=name, input=tool_input)
@@ -39,6 +43,18 @@ class FakeModel:
             await asyncio.sleep(self._delay)
             yield word
         yield StepResult(content=[{"type": "text", "text": plan}], stop_reason="end_turn")
+
+
+def _classified_as_about_app(system: list[dict[str, Any]]) -> bool:
+    """The guard's hint in the system prompt (AST-002): the question is about the app."""
+    return any("classified as being about the app" in block.get("text", "") for block in system)
+
+
+def _about_app_answer() -> str:
+    return (
+        f"{APP_SUMMARY}\n\nTo get started, [upload a contract](/contracts/upload) or "
+        "[upload your invoices](/invoices/upload)."
+    )
 
 
 def _current_turn(messages: list[Any]) -> tuple[str, list[dict], dict[str, dict]]:

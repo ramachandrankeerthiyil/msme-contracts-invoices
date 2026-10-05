@@ -96,6 +96,11 @@ services:
       ASSISTANT_LLM: ${ASSISTANT_LLM:-claude}
       ASSISTANT_LLM_MODEL: ${ASSISTANT_LLM_MODEL:-claude-sonnet-5}
       ASSISTANT_LLM_EFFORT: ${ASSISTANT_LLM_EFFORT:-medium}
+      # The small model that checks every question first (AST-002, ADR-0005).
+      ASSISTANT_GUARD_MODEL: ${ASSISTANT_GUARD_MODEL:-claude-haiku-4-5-20251001}
+      # So the app guide never states an outdated at-risk window.
+      INVOICE_AT_RISK_DAYS: ${INVOICE_AT_RISK_DAYS:-5}
+      CONTRACT_AT_RISK_DAYS: ${CONTRACT_AT_RISK_DAYS:-3}
       INVOICE_API_URL: http://invoice-service:8002
       CONTRACT_API_URL: http://contract-service:8001
     depends_on:

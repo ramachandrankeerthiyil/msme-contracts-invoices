@@ -83,7 +83,7 @@ async function answer(call: Call, text: string) {
   await settle(call)
 }
 
-const box = () => screen.getByRole('textbox', { name: 'Ask a question about your contracts or invoices' })
+const box = () => screen.getByRole('textbox', { name: 'Ask a question about your contracts, invoices or this app' })
 
 describe('AssistantPage', () => {
   it('AST-001 AC1: is in the navigation under Assistant', () => {
@@ -129,6 +129,52 @@ describe('AssistantPage', () => {
     expect(screen.getByRole('status')).toHaveTextContent('Answer ready. You have 2 unpaid invoices.')
     expect(box()).toHaveFocus()
     expect(screen.getByRole('button', { name: 'Send' })).toBeInTheDocument()
+  })
+
+  it('AST-002 AC14: the welcome, subtitle and question box say it covers the app too', () => {
+    renderPage()
+
+    expect(SUGGESTIONS).toContain('What is this app about?')
+    expect(SUGGESTIONS).toContain('How does this app work?')
+    const buttons = within(screen.getByRole('list', { name: 'Suggested questions' })).getAllByRole('button')
+    expect(buttons.map((b) => b.textContent)).toEqual(expect.arrayContaining(['What is this app about?', 'How does this app work?']))
+    expect(SUGGESTIONS.length).toBeGreaterThanOrEqual(4)
+    expect(SUGGESTIONS.length).toBeLessThanOrEqual(8)
+    expect(screen.getByText('Ask about your contracts and invoices, or how this app works.')).toBeInTheDocument()
+    expect(screen.getByText(/and tell you about this\s+app\./)).toBeInTheDocument()
+    expect(box()).toBeInTheDocument()
+  })
+
+  it('AST-002 AC14: asking the app questions sends them like any other question', async () => {
+    renderPage()
+
+    await userEvent.click(screen.getByRole('button', { name: 'What is this app about?' }))
+
+    expect(call(0).body.messages).toEqual([{ role: 'user', content: 'What is this app about?' }])
+  })
+
+  it('AST-002 AC17: a declined reply is an ordinary answer: shown, copyable, announced, kept', async () => {
+    renderPage()
+    await userEvent.type(box(), 'Write me a poem{Enter}')
+    const declined =
+      "I can only help with your contracts and invoices, and with explaining how this app works, so I can't help with that.\n\n- To record a payment, see [Upload invoices](/invoices/upload)."
+
+    call(0).emit('text', { delta: declined })
+    call(0).emit('done', { stop_reason: 'declined' })
+    await settle(call(0))
+
+    const card = screen.getByRole('article', { name: "Talk to Me's answer" })
+    expect(within(card).getByText(/I can only help with your contracts and invoices/)).toBeInTheDocument()
+    expect(within(card).getByRole('link', { name: 'Upload invoices' })).toHaveAttribute('href', '/invoices/upload')
+    expect(within(card).queryByText(/Checked|Checking/)).not.toBeInTheDocument() // nothing was looked up
+    expect(screen.getByRole('status')).toHaveTextContent('Answer ready.')
+    expect(box()).toHaveFocus()
+    await userEvent.click(within(card).getByRole('button', { name: 'Copy answer' }))
+    expect(navigator.clipboard.writeText).toHaveBeenCalledWith(declined)
+
+    await userEvent.type(box(), 'Which invoices are unpaid?{Enter}')
+    expect(call(1).body.messages.map((m) => m.role)).toEqual(['user', 'assistant', 'user'])
+    expect(call(1).body.messages[1]?.content).toBe(declined)
   })
 
   it('AST-001 AC3: Enter sends, Shift+Enter adds a line, empty questions cannot be sent', async () => {

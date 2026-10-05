@@ -14,9 +14,11 @@ from starlette.responses import StreamingResponse
 from starlette.types import Receive, Scope, Send
 
 from app.assistant.clock import get_today
-from app.assistant.events import AssistantError, Event
+from app.assistant.events import AssistantError, Event, Usage
+from app.assistant.guard import DECLINED, GuardDecision
 from app.assistant.loop import ChatStats, answer
-from app.assistant.telemetry import CHATS, FIRST_TEXT_SECONDS, LLM_TOKENS
+from app.assistant.refusals import reply_for
+from app.assistant.telemetry import CHATS, FIRST_TEXT_SECONDS, GUARD, LLM_TOKENS
 from app.assistant.tools import Lookups
 from app.core.logging import get_logger
 
@@ -110,6 +112,33 @@ class EventStreamResponse(StreamingResponse):
             group.start_soon(watch_disconnect)
 
 
+async def _guard(request: Request, history: list[dict[str, str]]) -> GuardDecision:
+    """The intent check (AST-002). Never raises; logs and counts the decision, not the text."""
+    guard = request.app.state.guard
+    decision = await guard.classify(history)
+    label = decision.intent.value if decision.intent else "unknown"
+    GUARD.labels(intent=label).inc()
+    _count_usage(guard.model, decision.usage)
+    if decision.intent is None:
+        log.warning(
+            "assistant_guard.unavailable",
+            message="Intent check unavailable; the question goes to the assistant's own rules",
+            reason=decision.reason,
+            duration_ms=decision.duration_ms,
+        )
+    log.info(
+        "assistant_guard.decision",
+        message=f"Question classified as {label}",
+        intent=label,
+        source=decision.source,
+        model=guard.model,
+        input_tokens=decision.usage.input_tokens,
+        output_tokens=decision.usage.output_tokens,
+        duration_ms=decision.duration_ms,
+    )
+    return decision
+
+
 async def _events(
     request: Request, history: list[dict[str, str]], today: date
 ) -> AsyncIterator[str]:
@@ -130,16 +159,34 @@ async def _events(
         turns=len(history),
         question_chars=len(history[-1]["content"]),
     )
-    events = answer(
-        model=model,
-        lookups=lookups,
-        history=history,
-        today=today,
-        timezone=settings.app_timezone,
-        max_lookups=settings.max_lookups,
-        stats=stats,
-    )
     try:
+        decision = await _guard(request, history)
+        if decision.intent in DECLINED:
+            # A fixed reply: the question reaches neither the main model nor any lookup.
+            first_text_ms = round((time.perf_counter() - started) * 1000)
+            FIRST_TEXT_SECONDS.observe(first_text_ms / 1000)
+            yield Event("text", {"delta": reply_for(decision.intent)}).sse()
+            yield Event("done", {"stop_reason": "declined"}).sse()
+            CHATS.labels(result="declined").inc()
+            log.info(
+                "assistant_chat.declined",
+                message="Question declined as out of scope",
+                intent=decision.intent.value,
+                duration_ms=first_text_ms,
+            )
+            return
+        events = answer(
+            model=model,
+            lookups=lookups,
+            history=history,
+            today=today,
+            timezone=settings.app_timezone,
+            max_lookups=settings.max_lookups,
+            stats=stats,
+            intent=decision.intent,
+            invoice_days=settings.invoice_at_risk_days,
+            contract_days=settings.contract_at_risk_days,
+        )
         async with aclosing(events):
             async for event in events:
                 if event.type == "text" and first_text_ms is None:
@@ -182,6 +229,7 @@ async def _events(
         "assistant_chat.completed",
         message="Answer completed",
         model=model.model,
+        intent=decision.intent.value if decision.intent else "unknown",
         steps=stats.steps,
         tools=stats.tools,
         input_tokens=stats.usage.input_tokens,
@@ -195,7 +243,10 @@ async def _events(
 
 
 def _count_tokens(model: str, stats: ChatStats) -> None:
-    usage = stats.usage
+    _count_usage(model, stats.usage)
+
+
+def _count_usage(model: str, usage: Usage) -> None:
     for direction, tokens in (
         ("input", usage.input_tokens),
         ("output", usage.output_tokens),

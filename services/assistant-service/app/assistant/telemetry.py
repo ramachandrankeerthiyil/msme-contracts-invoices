@@ -6,7 +6,7 @@ from app.core.metrics import REGISTRY
 
 CHATS = Counter(
     "assistant_chats_total",
-    "Questions answered, by result (completed, failed, cancelled, rejected)",
+    "Questions answered, by result (completed, declined, failed, cancelled, rejected)",
     ["result"],
     registry=REGISTRY,
 )
@@ -21,4 +21,10 @@ FIRST_TEXT_SECONDS = Histogram(
 )
 LLM_TOKENS = Counter(
     "llm_tokens_total", "Claude tokens used", ["model", "direction"], registry=REGISTRY
+)
+GUARD = Counter(
+    "assistant_guard_total",
+    "Intent decisions before answering (AST-002); unknown = the check was unavailable",
+    ["intent"],
+    registry=REGISTRY,
 )

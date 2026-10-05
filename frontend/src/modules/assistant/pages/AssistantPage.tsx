@@ -16,6 +16,8 @@ export const SUGGESTIONS = [
   'What risks are in my contracts?',
   'Which contracts end this month?',
   'Which contracts need my attention?',
+  'What is this app about?',
+  'How does this app work?',
 ] as const
 
 const NEAR_BOTTOM_PX = 160
@@ -25,7 +27,7 @@ function nearBottom(): boolean {
   return scrollY + innerHeight >= document.documentElement.scrollHeight - NEAR_BOTTOM_PX
 }
 
-/** "Talk to Me": ask questions about contracts and invoices in plain English (AST-001). */
+/** "Talk to Me": ask about contracts, invoices and the app in plain English (AST-001, AST-002). */
 export function AssistantPage() {
   const { turns, isAnswering, finishedTurnId, ask, stop, retry, reset } = useConversation()
   const input = useRef<HTMLTextAreaElement>(null)
@@ -75,7 +77,7 @@ export function AssistantPage() {
   return (
     <>
       <PageHeader
-        description="Ask questions about your contracts and invoices in plain English."
+        description="Ask about your contracts and invoices, or how this app works."
         action={
           turns.length > 0 ? (
             <Button variant="secondary" onClick={startOver}>
@@ -119,8 +121,8 @@ function Welcome({ onPick }: { onPick: (question: string) => void }) {
         How can I help today?
       </h2>
       <p className="mx-auto mt-2 max-w-prose text-text-muted">
-        I can look up your invoices and contracts and explain what I find. Pick a question or
-        type your own below.
+        I can look up your invoices and contracts, explain what I find, and tell you about this
+        app. Pick a question or type your own below.
       </p>
       <ul aria-label="Suggested questions" className="mx-auto mt-6 grid max-w-3xl gap-3 sm:grid-cols-2">
         {SUGGESTIONS.map((question) => (

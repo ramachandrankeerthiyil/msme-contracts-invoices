@@ -26,7 +26,7 @@ def test_request_uses_sonnet_5_adaptive_thinking_and_caching():
     assert params["output_config"] == {"effort": "medium"}
     assert params["cache_control"] == {"type": "ephemeral"}
     assert params["system"][0]["text"] == INSTRUCTIONS
-    assert params["system"][1]["text"] == "Today is Friday, 25 Sep 2026 (Asia/Kolkata)."
+    assert params["system"][2]["text"] == "Today is Friday, 25 Sep 2026 (Asia/Kolkata)."
 
 
 def test_default_settings_choose_claude_sonnet_5():

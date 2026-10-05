@@ -14,6 +14,7 @@ from fastapi.testclient import TestClient
 
 from app.assistant.clock import get_today
 from app.assistant.events import StepResult, ToolCall, Usage
+from app.assistant.guard import GuardDecision, Intent
 from app.config import Settings
 from app.core.logging import build_formatter
 from app.main import create_app
@@ -241,9 +242,11 @@ class ScriptedModel:
     def __init__(self, *steps: Step) -> None:
         self.steps = list(steps)
         self.seen: list[list[Any]] = []
+        self.requests: list[dict[str, Any]] = []  # the system prompt and tools of every step
 
     async def stream_step(self, *, system, tools, messages) -> AsyncIterator[str | StepResult]:
         self.seen.append(json.loads(json.dumps(messages, default=str)))
+        self.requests.append({"system": system, "tools": tools})
         step = self.steps.pop(0) if self.steps else "(script ended)"
         usage = Usage(input_tokens=100, output_tokens=10, cache_read_tokens=50)
         if isinstance(step, Exception):
@@ -279,6 +282,29 @@ class ScriptedModel:
         ]
 
 
+class ScriptedGuard:
+    """Plays back fixed intent decisions (the last one repeats), or fails open on demand.
+
+    `None` stands for "the check was unavailable". Records the history it was shown.
+    """
+
+    model = "scripted-guard"
+
+    def __init__(self, *decisions: Intent | None | GuardDecision) -> None:
+        self.decisions = list(decisions) or [Intent.DATA]
+        self.seen: list[list[dict[str, str]]] = []
+
+    async def classify(self, history: list[dict[str, str]]) -> GuardDecision:
+        self.seen.append([dict(m) for m in history])
+        item = self.decisions.pop(0) if len(self.decisions) > 1 else self.decisions[0]
+        if isinstance(item, GuardDecision):
+            return item
+        usage = Usage(input_tokens=40, output_tokens=5)
+        if item is None:
+            return GuardDecision(None, "fallback", 7, reason="TimeoutError")
+        return GuardDecision(item, "classifier", 7, usage)
+
+
 # --- Fixtures ------------------------------------------------------------------------------------
 
 
@@ -302,6 +328,8 @@ def downstream() -> Downstream:
 def app(settings: Settings, downstream: Downstream) -> FastAPI:
     app = create_app(settings, transport=httpx.MockTransport(downstream.handle))
     app.dependency_overrides[get_today] = lambda: TODAY
+    # Everything is "about the business" unless a test installs another guard (AST-002).
+    app.state.guard = ScriptedGuard(Intent.DATA)
     return app
 
 
@@ -317,6 +345,16 @@ def use_model(app: FastAPI) -> Callable[..., ScriptedModel]:
         model = ScriptedModel(*steps)
         app.state.model = model
         return model
+
+    return install
+
+
+@pytest.fixture
+def use_guard(app: FastAPI) -> Callable[..., ScriptedGuard]:
+    def install(*decisions: Intent | None | GuardDecision) -> ScriptedGuard:
+        guard = ScriptedGuard(*decisions)
+        app.state.guard = guard
+        return guard
 
     return install
 

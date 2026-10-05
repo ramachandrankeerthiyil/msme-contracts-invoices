@@ -73,6 +73,12 @@ docker compose run --rm invoice-service alembic revision --autogenerate -m "desc
   local **Mailpit** inbox at `http://localhost:8025`, so nothing reaches a real client. Set
   `SMTP_HOST` and the other `SMTP_*` values in `.env` to send for real. `scripts/e2e.sh` forces
   Mailpit. The recipient is only ever the invoice's stored `customer_email` (ADR-0004).
+- Talk to Me guardrails (AST-002, ADR-0005): a small guard model (`ASSISTANT_GUARD_MODEL`, default
+  Haiku 4.5) labels every question first. Only `data` (contracts and invoices) and `about_app`
+  reach the main model; everything else gets a fixed reply from `app/assistant/refusals.py`. The
+  app guide for "what is this app / how does it work" is `app/assistant/app_guide.py`: **update it
+  when the app's behaviour changes**. With `ASSISTANT_LLM=fake` a keyword guard is used, so tests
+  never call the AI. The golden questions for every intent are in the opt-in `-m llm` eval.
 - `/health`, `/ready`, `/metrics` are internal only (not routed by the gateway).
 - `app/core/` is intentionally duplicated in all three services — change every copy together.
 - Contract reading: `CONTRACT_EXTRACTOR=claude` (default) or `fake` (tests/e2e, no API calls).

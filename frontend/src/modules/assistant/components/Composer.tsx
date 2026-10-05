@@ -50,7 +50,7 @@ export const Composer = forwardRef<HTMLTextAreaElement, ComposerProps>(function 
       className="sticky bottom-0 -mx-4 border-t border-border bg-bg px-4 pt-4 pb-4 sm:-mx-8 sm:px-8"
     >
       <label htmlFor={id} className="mb-2 block font-semibold">
-        Ask a question about your contracts or invoices
+        Ask a question about your contracts, invoices or this app
       </label>
       <div className="flex items-end gap-3">
         <textarea

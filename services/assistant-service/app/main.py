@@ -8,6 +8,7 @@ from app.api import api_routers
 from app.assistant.claude import ClaudeModel
 from app.assistant.events import Model
 from app.assistant.fake import FakeModel
+from app.assistant.guard import ClaudeGuard, Guard, KeywordGuard
 from app.config import Settings, get_settings
 from app.core import health, metrics
 from app.core.access_log import AccessLogMiddleware
@@ -29,6 +30,15 @@ def build_model(settings: Settings) -> Model:
         api_key=settings.anthropic_api_key.get_secret_value(),
         model=settings.assistant_llm_model,
         effort=settings.assistant_llm_effort,
+    )
+
+
+def build_guard(settings: Settings) -> Guard:
+    if settings.assistant_llm == "fake":
+        return KeywordGuard()
+    return ClaudeGuard(
+        api_key=settings.anthropic_api_key.get_secret_value(),
+        model=settings.assistant_guard_model,
     )
 
 
@@ -74,6 +84,7 @@ def create_app(
             log_level=settings.log_level,
             assistant_llm=settings.assistant_llm,
             model=app.state.model.model,
+            guard_model=app.state.guard.model,
         )
         yield
         await app.state.http.aclose()
@@ -88,6 +99,7 @@ def create_app(
     )
     app.state.settings = settings
     app.state.model = build_model(settings)
+    app.state.guard = build_guard(settings)
     ready_checks: dict[str, ReadyCheck] = {
         "invoice_service": _service_check("invoice-service", settings.invoice_api_url),
         "contract_service": _service_check("contract-service", settings.contract_api_url),

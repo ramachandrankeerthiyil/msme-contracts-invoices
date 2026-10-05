@@ -15,6 +15,7 @@ from datetime import date
 from typing import Any
 
 from app.assistant.events import AssistantError, Event, Model, StepResult, ToolCall, Usage
+from app.assistant.guard import Intent
 from app.assistant.prompt import LIMIT_REACHED_NOTE, build_system
 from app.assistant.telemetry import TOOL_CALLS
 from app.assistant.tools import TOOL_DEFINITIONS, Lookups, ToolOutcome, lookup_labels
@@ -42,8 +43,15 @@ async def answer(
     timezone: str,
     max_lookups: int,
     stats: ChatStats,
+    intent: Intent | None = Intent.DATA,
+    invoice_days: int = 5,
+    contract_days: int = 3,
 ) -> AsyncIterator[Event]:
-    system = build_system(today, timezone)
+    system = build_system(
+        today, timezone, intent=intent, invoice_days=invoice_days, contract_days=contract_days
+    )
+    # A question about the app is answered from the guide, so no lookups are offered (AST-002).
+    tools = [] if intent == Intent.ABOUT_APP else TOOL_DEFINITIONS
     messages: list[dict[str, Any]] = [dict(m) for m in history]
     max_steps = max_lookups + 2  # enough to use every lookup, then answer
     wrote_text = False
@@ -55,9 +63,7 @@ async def answer(
         stats.steps += 1
         step: StepResult | None = None
         separated = False
-        async for item in model.stream_step(
-            system=system, tools=TOOL_DEFINITIONS, messages=messages
-        ):
+        async for item in model.stream_step(system=system, tools=tools, messages=messages):
             if isinstance(item, StepResult):
                 step = item
                 continue

@@ -31,16 +31,18 @@ class ClaudeModel:
         self, *, system: list[dict[str, Any]], tools: list[dict[str, Any]], messages: list[Any]
     ) -> dict[str, Any]:
         """Everything sent to the API (kept separate so tests can check it without a call)."""
-        return {
+        params: dict[str, Any] = {
             "model": self.model,
             "max_tokens": MAX_TOKENS,
             "thinking": {"type": "adaptive"},
             "output_config": {"effort": self._effort},
             "cache_control": {"type": "ephemeral"},
             "system": system,
-            "tools": tools,
             "messages": messages,
         }
+        if tools:  # questions about the app use no lookups (AST-002)
+            params["tools"] = tools
+        return params
 
     async def stream_step(
         self, *, system: list[dict[str, Any]], tools: list[dict[str, Any]], messages: list[Any]
