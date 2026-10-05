@@ -1,4 +1,4 @@
-import type { DashboardData, InvoiceItem, InvoicePage } from './api'
+import type { DashboardData, InvoiceItem, InvoicePage, ReminderDraft } from './api'
 
 // Fixtures shaped like invoice-service responses (sample data as seen on 25 Sep 2026).
 
@@ -15,6 +15,9 @@ export function invoiceItem(overrides: Partial<InvoiceItem> = {}): InvoiceItem {
     days_until_due: -41,
     record_status: 'new',
     record_updated_at: null,
+    customer_email: 'accounts@deccanprinting.example',
+    can_remind: true,
+    last_reminder_at: null,
     ...overrides,
   }
 }
@@ -33,6 +36,7 @@ export const INVOICE_PAGE: InvoicePage = {
       days_until_due: 0,
       record_status: 'updated',
       record_updated_at: '2026-09-24T17:11:02Z',
+      can_remind: false,
     }),
     invoiceItem({
       id: 'id-2603',
@@ -43,6 +47,7 @@ export const INVOICE_PAGE: InvoicePage = {
       paid_date: '2026-09-12',
       status: 'paid',
       days_until_due: null,
+      can_remind: false,
     }),
   ],
   total: 9,
@@ -88,4 +93,18 @@ export const DASHBOARD: DashboardData = {
     this_week: { view: 'all', due_from: '2026-09-24', due_to: '2026-09-30' },
     follow_up: { view: 'follow_up', due_to: '2026-09-30' },
   },
+}
+
+export function reminderDraft(overrides: Partial<ReminderDraft> = {}): ReminderDraft {
+  return {
+    invoice_id: 'id-2606',
+    invoice_number: 'INV-2606',
+    customer_name: 'Deccan Printing Works',
+    to: 'accounts@deccanprinting.example',
+    subject: 'Payment reminder: invoice INV-2606 (₹1,25,000.00) was due on 15 Aug 2026',
+    message:
+      'Dear Deccan Printing Works,\n\nI hope you are well. This is a friendly reminder that invoice INV-2606 is now 41 days overdue.\n\nThank you,\nAccounts Team',
+    last_reminder_at: null,
+    ...overrides,
+  }
 }

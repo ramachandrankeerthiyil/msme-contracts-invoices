@@ -1,11 +1,12 @@
 import uuid
 from datetime import date, datetime
 from decimal import Decimal
-from typing import Literal
+from typing import Annotated, Literal
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, StringConstraints, field_validator
 
 from app.domain.invoice_status import Status, View
+from app.domain.reminders import MAX_MESSAGE_LENGTH, MAX_SUBJECT_LENGTH
 
 
 class Rejection(BaseModel):
@@ -61,6 +62,9 @@ class InvoiceItem(BaseModel):
     days_until_due: int | None
     record_status: Literal["new", "updated"]
     record_updated_at: datetime | None
+    customer_email: str | None  # INV-004
+    can_remind: bool  # INV-004: true when the invoice is Outstanding
+    last_reminder_at: datetime | None  # INV-004
 
 
 class ViewCounts(BaseModel):
@@ -80,6 +84,46 @@ class InvoicePage(BaseModel):
     page_size: int
     total_amount: Decimal
     counts: ViewCounts
+
+
+# --- INV-004: email reminder ---------------------------------------------------------------
+
+
+class ReminderDraftOut(BaseModel):
+    invoice_id: uuid.UUID
+    invoice_number: str
+    customer_name: str
+    to: str | None
+    subject: str
+    message: str
+    last_reminder_at: datetime | None
+
+
+class SendReminderIn(BaseModel):
+    """Exactly a subject and a message. Any other field, such as `to`, is rejected (AC10)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    subject: Annotated[
+        str, StringConstraints(strip_whitespace=True, min_length=1, max_length=MAX_SUBJECT_LENGTH)
+    ]
+    message: Annotated[
+        str, StringConstraints(strip_whitespace=True, min_length=1, max_length=MAX_MESSAGE_LENGTH)
+    ]
+
+    @field_validator("subject")
+    @classmethod
+    def subject_on_one_line(cls, value: str) -> str:
+        if "\r" in value or "\n" in value:
+            raise ValueError("The subject must be on one line.")
+        return value
+
+
+class ReminderOut(BaseModel):
+    id: uuid.UUID
+    invoice_id: uuid.UUID
+    to: str
+    sent_at: datetime
 
 
 # --- INV-003: dashboard --------------------------------------------------------------------

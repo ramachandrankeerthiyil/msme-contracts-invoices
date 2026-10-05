@@ -65,6 +65,16 @@ describe('UploadInvoicesPage', () => {
     expect(await screen.findByText('No uploads yet. Your uploads will be listed here.')).toBeInTheDocument()
   })
 
+  it('INV_001_AC13 lists Customer Email as optional, and still lists the six required columns', async () => {
+    renderPage()
+
+    const optional = within(screen.getByRole('list', { name: 'Optional columns' }))
+    expect(optional.getAllByRole('listitem')).toHaveLength(1)
+    expect(optional.getByText('Customer Email (needed to send email reminders)')).toBeInTheDocument()
+    expect(within(screen.getByRole('list', { name: 'Required columns' })).queryByText(/Customer Email/)).toBeNull()
+    await screen.findByText('No uploads yet. Your uploads will be listed here.')
+  })
+
   it('INV_001_AC9 uploads the chosen file and shows the summary', async () => {
     vi.mocked(api.uploadInvoices).mockResolvedValue(summary)
     renderPage()

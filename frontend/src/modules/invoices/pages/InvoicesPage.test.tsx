@@ -38,7 +38,7 @@ describe('InvoicesPage', () => {
     const table = await screen.findByRole('table', { name: 'Invoices' })
     const rows = within(table).getAllByRole('row')
     expect(within(rows[0]!).getAllByRole('columnheader').map((th) => th.textContent)).toEqual([
-      'Invoice', 'Customer', 'Due', 'Amount', 'Status', 'Record',
+      'Invoice', 'Customer', 'Due', 'Amount', 'Status', 'Reminder',
     ])
     const overdue = within(rows[1]!)
     expect(overdue.getByText('INV-2606')).toBeInTheDocument()

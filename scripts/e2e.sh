@@ -11,6 +11,8 @@ cd "$(dirname "$0")/.."
 # on and would otherwise recreate contract-service with the default (real) extractor.
 export CONTRACT_EXTRACTOR=fake
 export ASSISTANT_LLM=fake
+# Reminder emails (INV-004) must land in the local Mailpit inbox, never reach a real client.
+export SMTP_HOST=mailpit SMTP_PORT=1025 SMTP_USERNAME= SMTP_PASSWORD= SMTP_STARTTLS=false
 
 cleanup() {
   echo "Removing e2e test contracts…"
@@ -20,7 +22,10 @@ cleanup() {
     # shellcheck disable=SC2086
     docker compose exec -T contract-service rm -f $paths || true
   fi
-  echo "Switching contract reading and Talk to Me back to Claude…"
+  echo "Removing e2e test reminders (sample customers only: reserved .example addresses)…"
+  docker compose exec -T db sh -c     'psql -qAt -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "DELETE FROM invoices.invoice_reminders WHERE recipient LIKE '"'"'%.example'"'"'"' >/dev/null || true
+  echo "Switching contract reading and Talk to Me back to Claude, and the mail server back to your .env…"
+  env -u SMTP_HOST -u SMTP_PORT -u SMTP_USERNAME -u SMTP_PASSWORD -u SMTP_STARTTLS     docker compose up -d --wait invoice-service >/dev/null 2>&1 || true
   CONTRACT_EXTRACTOR=claude ASSISTANT_LLM=claude \
     docker compose up -d --wait contract-service assistant-service >/dev/null 2>&1 || true
 }
@@ -43,6 +48,13 @@ fi
 active=$(docker compose exec -T assistant-service printenv ASSISTANT_LLM)
 if [[ "$active" != "fake" ]]; then
   echo "ABORT: assistant-service is using the '$active' model, not the stand-in." >&2
+  exit 1
+fi
+
+# Safety: never let an e2e run send reminder emails anywhere but the local Mailpit inbox.
+active=$(docker compose exec -T invoice-service printenv SMTP_HOST)
+if [[ "$active" != "mailpit" ]]; then
+  echo "ABORT: invoice-service would send email to '$active', not the local Mailpit inbox." >&2
   exit 1
 fi
 

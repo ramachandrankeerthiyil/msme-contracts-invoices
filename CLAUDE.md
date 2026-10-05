@@ -69,6 +69,10 @@ docker compose run --rm invoice-service alembic revision --autogenerate -m "desc
 ```
 
 - Service API docs: `http://localhost:8080/api/invoices/docs`, `…/api/contracts/docs`.
+- Reminder emails (INV-004): invoice-service sends them over SMTP. By default they go to the
+  local **Mailpit** inbox at `http://localhost:8025`, so nothing reaches a real client. Set
+  `SMTP_HOST` and the other `SMTP_*` values in `.env` to send for real. `scripts/e2e.sh` forces
+  Mailpit. The recipient is only ever the invoice's stored `customer_email` (ADR-0004).
 - `/health`, `/ready`, `/metrics` are internal only (not routed by the gateway).
 - `app/core/` is intentionally duplicated in all three services — change every copy together.
 - Contract reading: `CONTRACT_EXTRACTOR=claude` (default) or `fake` (tests/e2e, no API calls).

@@ -3,7 +3,7 @@
 All companies and people are fictional. Dates are computed relative to the day the script runs,
 so each file always demonstrates the intended statuses:
 
-  samples/invoices-sample.xlsx       paid, outstanding (overdue), at risk, open — all valid rows
+  samples/invoices-sample.xlsx       paid, outstanding (overdue), at risk, open — all valid rows, with emails
   samples/invoices-with-errors.xlsx  invalid rows + a duplicate invoice number (tests validation)
   samples/contract-msa-bluewave.docx services agreement: expires in 2 days, high-severity risks
   samples/contract-supply-sharma.docx supply agreement: in force until next year, balanced terms
@@ -26,6 +26,9 @@ from openpyxl.styles import Alignment, Font, PatternFill
 OUT = Path(__file__).resolve().parent.parent / "samples"
 TODAY = datetime.now(ZoneInfo("Asia/Kolkata")).date()
 HEADERS = ["Invoice Number", "Customer Name", "Date Raised", "Due Date", "Amount", "Paid Date"]
+# The sample adds the optional Customer Email column (INV-001 AC13). invoices-with-errors.xlsx keeps
+# the six-column layout on purpose, so a sheet without the column stays covered.
+SAMPLE_HEADERS = [*HEADERS, "Customer Email"]
 
 
 def d(days: int) -> date:
@@ -66,6 +69,19 @@ INVOICES = [
 ]
 
 
+# Invented, reserved ".example" addresses (INV-004). Nilgiri Tea Traders has none, so its
+# outstanding invoice shows the "no email address on file" message.
+CUSTOMER_EMAILS = {
+    "Sharma Textiles Pvt Ltd": "accounts@sharmatextiles.example",
+    "Kaveri Agro Foods": "payables@kaveriagro.example",
+    "Bluewave Logistics LLP": "ap@bluewavelogistics.example",
+    "Mehta Auto Components": "accounts@mehtaauto.example",
+    "Green Leaf Organics": "finance@greenleaf.example",
+    "Deccan Printing Works": "accounts@deccanprinting.example",
+    "Sunrise Pharma Distributors": "ap@sunrisepharma.example",
+}
+
+
 def _style_sheet(ws, widths: list[int]) -> None:
     fill = PatternFill("solid", fgColor="D6E8F9")
     for cell in ws[1]:
@@ -87,11 +103,21 @@ def make_invoices_sample() -> Path:
     wb = Workbook()
     ws = wb.active
     ws.title = "Invoices"
-    ws.append(HEADERS)
+    ws.append(SAMPLE_HEADERS)
     for number, customer, raised, due, amount, paid, _status in INVOICES:
-        ws.append([number, customer, d(raised), d(due), amount, d(paid) if paid is not None else None])
+        ws.append(
+            [
+                number,
+                customer,
+                d(raised),
+                d(due),
+                amount,
+                d(paid) if paid is not None else None,
+                CUSTOMER_EMAILS.get(customer),
+            ]
+        )
         _format_row(ws, ws.max_row)
-    _style_sheet(ws, [16, 32, 15, 15, 15, 15])
+    _style_sheet(ws, [16, 32, 15, 15, 15, 15, 36])
 
     key = wb.create_sheet("Expected status")
     key.append(["Invoice Number", "Expected status (as of the day this file was generated)"])

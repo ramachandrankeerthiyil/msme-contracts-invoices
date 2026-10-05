@@ -7,6 +7,8 @@ from typing import Any
 from openpyxl import Workbook
 
 HEADERS = ["Invoice Number", "Customer Name", "Date Raised", "Due Date", "Amount", "Paid Date"]
+EMAIL_HEADER = "Customer Email"
+HEADERS_WITH_EMAIL = [*HEADERS, EMAIL_HEADER]
 XLSX = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 
 

@@ -12,7 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.models import Invoice, InvoiceUpload
 from app.domain.duplicates import ResolvedRows
 
-# Keeps each INSERT well under Postgres' 32,767 bind-parameter limit (12 columns per row).
+# Keeps each INSERT well under Postgres' 32,767 bind-parameter limit (13 columns per row).
 UPSERT_BATCH_SIZE = 1000
 
 
@@ -38,6 +38,7 @@ async def upsert_invoices(
                 "due_date": invoice.due_date,
                 "amount": invoice.amount,
                 "paid_date": invoice.paid_date,
+                "customer_email": invoice.customer_email,
                 "record_status": "updated" if replaced_in_file else "new",
                 "record_updated_at": now if replaced_in_file else None,
                 "first_upload_id": upload_id,
@@ -58,6 +59,7 @@ async def upsert_invoices(
                 "due_date": excluded.due_date,
                 "amount": excluded.amount,
                 "paid_date": excluded.paid_date,
+                "customer_email": excluded.customer_email,
                 "record_status": "updated",
                 "record_updated_at": now,
                 "last_upload_id": excluded.last_upload_id,

@@ -11,7 +11,7 @@ from typing import Any
 from openpyxl import load_workbook
 
 from app.core.errors import AppError
-from app.domain.invoice_rules import REQUIRED_COLUMNS
+from app.domain.invoice_rules import OPTIONAL_COLUMNS, REQUIRED_COLUMNS
 
 MAX_UPLOAD_BYTES = 10 * 1024 * 1024
 MAX_ROWS = 20_000
@@ -97,6 +97,13 @@ def read_rows(path: Path) -> list[RawRow]:
                 details={"missing": missing, "found": [str(h) for h in header if h is not None]},
             )
         index_of = {column: columns[column.lower()] for column in REQUIRED_COLUMNS}
+        index_of.update(
+            {
+                column: columns[column.lower()]
+                for column in OPTIONAL_COLUMNS
+                if column.lower() in columns
+            }
+        )
 
         rows: list[RawRow] = []
         for row_number, (cells, formulas) in enumerate(

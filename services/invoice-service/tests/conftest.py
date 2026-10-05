@@ -104,7 +104,13 @@ def db_rows(settings: Settings) -> Callable[[str], list[dict[str, Any]]]:
 @pytest.fixture
 def clean_tables(settings: Settings) -> None:
     schema = settings.db_schema
-    asyncio.run(_execute(settings, f'TRUNCATE "{schema}".invoices, "{schema}".invoice_uploads'))
+    asyncio.run(
+        _execute(
+            settings,
+            f'TRUNCATE "{schema}".invoice_reminders, "{schema}".invoices, '
+            f'"{schema}".invoice_uploads',
+        )
+    )
 
 
 @pytest.fixture

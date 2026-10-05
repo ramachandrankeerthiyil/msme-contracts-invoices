@@ -5,14 +5,14 @@ can never disagree (INV-003 AC6).
 """
 
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, datetime
 from decimal import Decimal
 from typing import Literal
 
 from sqlalchemy import ColumnElement, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.db.models import Invoice
+from app.db.models import Invoice, InvoiceReminder
 from app.domain.invoice_status import (
     STATUS_ORDER,
     VIEW_STATUSES,
@@ -77,6 +77,15 @@ class Summary:
 class InvoiceRow:
     invoice: Invoice
     status: Status
+    last_reminder_at: datetime | None = None  # INV-004
+
+
+_LAST_REMINDER_AT = (
+    select(func.max(InvoiceReminder.sent_at))
+    .where(InvoiceReminder.invoice_id == Invoice.id)
+    .correlate(Invoice)
+    .scalar_subquery()
+)
 
 
 def _escape_like(text: str) -> str:
@@ -135,9 +144,9 @@ async def search(
     limit: int | None = 25,
 ) -> list[InvoiceRow]:
     status = status_expr(today, at_risk_days)
-    statement = select(Invoice, status.label("status")).where(
-        *_base_conditions(filters), status.in_([s.value for s in VIEW_STATUSES[filters.view]])
-    )
+    statement = select(
+        Invoice, status.label("status"), _LAST_REMINDER_AT.label("last_reminder_at")
+    ).where(*_base_conditions(filters), status.in_([s.value for s in VIEW_STATUSES[filters.view]]))
 
     if sort == "status":
         rank = rank_expr(today, at_risk_days)
@@ -150,6 +159,6 @@ async def search(
     statement = statement.offset(offset).limit(limit)
 
     return [
-        InvoiceRow(invoice, Status(status_value))
-        for invoice, status_value in await session.execute(statement)
+        InvoiceRow(invoice, Status(status_value), reminded_at)
+        for invoice, status_value, reminded_at in await session.execute(statement)
     ]

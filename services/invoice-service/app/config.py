@@ -24,6 +24,17 @@ class Settings(BaseSettings):
     uploads_dir: str = "/data/uploads/invoices"
     invoice_at_risk_days: int = 5
 
+    # Reminder emails (INV-004, ADR-0004). The defaults point at the local Mailpit sink, so
+    # nothing reaches a real client until real SMTP settings are configured.
+    smtp_host: str = "mailpit"
+    smtp_port: int = 1025
+    smtp_username: str = ""
+    smtp_password: SecretStr = SecretStr("")
+    smtp_starttls: bool = False
+    smtp_from_address: str = "accounts@msme-poc.local"
+    reminder_sender_name: str = "Accounts Team"
+    smtp_timeout_seconds: float = 10
+
     @property
     def database_url(self) -> URL:
         return URL.create(

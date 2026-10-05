@@ -41,6 +41,15 @@ services:
       DB_USER: invoice_svc
       DB_PASSWORD: ${INVOICE_DB_PASSWORD}
       INVOICE_AT_RISK_DAYS: ${INVOICE_AT_RISK_DAYS:-5}
+      # Reminder emails (INV-004, ADR-0004). Defaults go to the local Mailpit inbox below.
+      SMTP_HOST: ${SMTP_HOST:-mailpit}
+      SMTP_PORT: ${SMTP_PORT:-1025}
+      SMTP_USERNAME: ${SMTP_USERNAME:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_STARTTLS: ${SMTP_STARTTLS:-false}
+      SMTP_FROM_ADDRESS: ${SMTP_FROM_ADDRESS:-accounts@msme-poc.local}
+      REMINDER_SENDER_NAME: ${REMINDER_SENDER_NAME:-Accounts Team}
+      SMTP_TIMEOUT_SECONDS: ${SMTP_TIMEOUT_SECONDS:-10}
     volumes:
       - uploads:/data/uploads
     depends_on:
@@ -49,6 +58,13 @@ services:
     healthcheck:
       <<: *service-healthcheck
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8002/health', timeout=2)"]
+
+  # Local mail sink (INV-004, ADR-0004): reminder emails land here instead of reaching a real
+  # client. Open the inbox at http://localhost:8025. Not used once SMTP_HOST points elsewhere.
+  mailpit:
+    image: axllent/mailpit:v1.21
+    ports:
+      - "127.0.0.1:8025:8025"
 
   contract-service:
     build: ./services/contract-service
@@ -124,6 +140,7 @@ services:
     environment:
       HOME: /tmp
       BASE_URL: http://gateway
+      MAILPIT_URL: http://mailpit:8025
       SAMPLES_DIR: /samples
       CI: "true"
     volumes:

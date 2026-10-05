@@ -8,7 +8,7 @@ from openpyxl import Workbook, load_workbook
 
 from app.core.metrics import REGISTRY
 from app.domain import upload_service
-from tests.invoices.workbooks import HEADERS, row, upload, workbook_bytes
+from tests.invoices.workbooks import HEADERS, HEADERS_WITH_EMAIL, row, upload, workbook_bytes
 
 # --- AC2: file checks — nothing saved ------------------------------------------------------
 
@@ -243,7 +243,7 @@ def test_INV_001_formula_without_saved_value_is_rejected_with_explanation(upload
 # --- AC11: template ------------------------------------------------------------------------
 
 
-def test_INV_001_AC11_template_has_the_exact_headers_and_uploads_cleanly(upload_client):
+def test_INV_001_AC11_template_has_the_exact_headers_and_uploads_cleanly(upload_client, db_rows):
     response = upload_client.get("/api/invoices/template")
 
     assert response.status_code == 200
@@ -252,10 +252,72 @@ def test_INV_001_AC11_template_has_the_exact_headers_and_uploads_cleanly(upload_
     )
     assert 'filename="invoice-template.xlsx"' in response.headers["content-disposition"]
     sheet = load_workbook(BytesIO(response.content)).worksheets[0]
-    assert [cell.value for cell in sheet[1]] == HEADERS
+    assert [cell.value for cell in sheet[1]] == HEADERS_WITH_EMAIL
 
     body = upload(upload_client, response.content).json()
     assert (body["rows_created"], body["rows_rejected"]) == (1, 0)
+    assert db_rows("SELECT customer_email FROM invoices") == [
+        {"customer_email": "accounts@example.com"}
+    ]
+
+
+# --- AC13: optional Customer Email ----------------------------------------------------------
+
+
+def _emails(db_rows):
+    rows = db_rows("SELECT invoice_number, customer_email FROM invoices ORDER BY invoice_number")
+    return {r["invoice_number"]: r["customer_email"] for r in rows}
+
+
+def _upload_with_email(client, rows):
+    return upload(client, workbook_bytes(rows, headers=HEADERS_WITH_EMAIL)).json()
+
+
+def test_INV_001_AC13_email_is_stored_trimmed_and_lower_cased(upload_client, db_rows):
+    body = _upload_with_email(
+        upload_client,
+        [row("INV-1") + ["  Accounts@Acme.IN "], row("INV-2") + [None]],
+    )
+
+    assert (body["rows_created"], body["rows_rejected"]) == (2, 0)
+    assert _emails(db_rows) == {"INV-1": "accounts@acme.in", "INV-2": None}
+
+
+def test_INV_001_AC13_a_sheet_without_the_column_still_uploads(upload_client, db_rows):
+    body = upload(upload_client, workbook_bytes([row("INV-1")])).json()
+
+    assert (body["rows_created"], body["rows_rejected"]) == (1, 0)
+    assert _emails(db_rows) == {"INV-1": None}
+
+
+def test_INV_001_AC13_a_later_upload_overwrites_the_email_and_a_blank_clears_it(
+    upload_client, db_rows
+):
+    _upload_with_email(upload_client, [row("INV-1") + ["old@acme.in"], row("INV-2") + ["x@y.in"]])
+
+    body = _upload_with_email(
+        upload_client, [row("INV-1") + ["new@acme.in"], row("INV-2") + [None]]
+    )
+
+    assert body["rows_updated"] == 2
+    assert _emails(db_rows) == {"INV-1": "new@acme.in", "INV-2": None}
+
+
+def test_INV_001_AC13_an_invalid_address_rejects_only_that_row(upload_client, db_rows):
+    body = _upload_with_email(
+        upload_client,
+        [row("INV-1") + ["accounts@"], row("INV-2") + ["fine@acme.in"]],
+    )
+
+    assert (body["rows_created"], body["rows_rejected"]) == (1, 1)
+    assert body["rejections"] == [
+        {
+            "row": 2,
+            "invoice_number": "INV-1",
+            "reason": "Customer Email 'accounts@' is not a valid email address.",
+        }
+    ]
+    assert _emails(db_rows) == {"INV-2": "fine@acme.in"}
 
 
 # --- AC12: all or nothing ------------------------------------------------------------------

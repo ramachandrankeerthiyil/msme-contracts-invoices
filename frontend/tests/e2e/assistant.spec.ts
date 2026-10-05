@@ -48,7 +48,8 @@ test('AST-001 AC1-AC7, AC9, AC11, AC13, AC16: suggestion, streamed answer with l
   await invoiceLink.click()
   await expect(page).toHaveURL(/\/invoices\?view=all&q=INV-/)
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('All invoices')
-  await expect(page.getByRole('cell', { name: number ?? '' })).toBeVisible()
+  // The invoice cell starts with the number; the Reminder cell's button also mentions it (INV-004).
+  await expect(page.getByRole('cell', { name: new RegExp(`^${number ?? ''}\\b`) })).toBeVisible()
 
   // Back again: the conversation is still there (sessionStorage, AC8).
   await page.goBack()

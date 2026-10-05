@@ -8,6 +8,7 @@ from app.domain.invoice_rules import (
     ParsedInvoice,
     invoice_number_key,
     parse_amount,
+    parse_customer_email,
     parse_date,
     parse_invoice_number,
     validate_row,
@@ -117,6 +118,55 @@ def test_INV_001_AC4_amount_accepts(raw, expected):
 )
 def test_INV_001_AC4_amount_rejects(raw, problem):
     assert parse_amount(raw) == (None, problem)
+
+
+# --- AC13: Customer Email ------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("raw", "expected"),
+    [
+        (None, None),
+        ("", None),
+        ("   ", None),
+        ("accounts@acme.in", "accounts@acme.in"),
+        ("  Accounts@Acme.IN  ", "accounts@acme.in"),
+        ("first.last+tag@sub.example.co.in", "first.last+tag@sub.example.co.in"),
+    ],
+)
+def test_INV_001_AC13_email_accepts(raw, expected):
+    assert parse_customer_email(raw) == (expected, None)
+
+
+@pytest.mark.parametrize(
+    "raw",
+    [
+        "accounts",
+        "accounts@",
+        "@acme.in",
+        "accounts@acme",
+        "no spaces@acme.in",
+        "a@b@acme.in",
+        "a@acme..in",
+        "a@acme.in,b@acme.in",
+        "a@acme.in;b@acme.in",
+        "<a@acme.in>",
+        "x" * 250 + "@acme.in",
+    ],
+)
+def test_INV_001_AC13_email_rejects(raw):
+    value, problem = parse_customer_email(raw)
+
+    assert value is None
+    assert problem == f"Customer Email '{raw.strip()}' is not a valid email address."
+
+
+def test_INV_001_AC13_the_row_carries_the_email_and_blank_means_none():
+    with_email = validate_row(values(**{"Customer Email": " Billing@Acme.in "}))
+    without = validate_row(values())
+
+    assert with_email.customer_email == "billing@acme.in"
+    assert without.customer_email is None
 
 
 # --- AC4: whole-row validation ------------------------------------------------------------

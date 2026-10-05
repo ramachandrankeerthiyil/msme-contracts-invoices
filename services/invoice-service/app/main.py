@@ -13,6 +13,7 @@ from app.core.logging import configure_logging, get_logger
 from app.core.metrics import MetricsMiddleware
 from app.core.request_context import RequestContextMiddleware
 from app.db import create_engine, create_sessionmaker
+from app.domain.email_sender import SmtpEmailSender
 
 log = get_logger("app")
 
@@ -26,6 +27,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         engine = create_engine(settings)
         app.state.engine = engine
         app.state.sessionmaker = create_sessionmaker(engine)
+        app.state.email_sender = SmtpEmailSender(settings)
         log.info(
             "app.started",
             message=f"{settings.service_name} {settings.service_version} started",

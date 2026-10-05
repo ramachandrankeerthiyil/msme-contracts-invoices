@@ -29,6 +29,7 @@ from app.db.invoice_queries import InvoiceFilters, InvoiceRow, SortKey, SortOrde
 from app.domain.clock import get_today
 from app.domain.export import MAX_EXPORT_ROWS, build_export
 from app.domain.invoice_status import STATUS_ORDER, Status, View, days_until_due
+from app.domain.reminders import is_remindable
 
 router = APIRouter(tags=["Invoices"])
 log = get_logger("invoices")
@@ -67,6 +68,9 @@ def _to_item(row: InvoiceRow, today: date) -> InvoiceItem:
         days_until_due=days_until_due(invoice.due_date, invoice.paid_date, today),
         record_status=invoice.record_status,  # type: ignore[arg-type]
         record_updated_at=invoice.record_updated_at,
+        customer_email=invoice.customer_email,
+        can_remind=is_remindable(row.status),
+        last_reminder_at=row.last_reminder_at,
     )
 
 

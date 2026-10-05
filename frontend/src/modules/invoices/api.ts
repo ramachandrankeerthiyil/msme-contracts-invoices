@@ -54,6 +54,8 @@ export const REQUIRED_COLUMNS = [
   'Amount',
   'Paid Date',
 ] as const
+// Optional (INV-001 AC13): needed to send email reminders (INV-004).
+export const OPTIONAL_COLUMNS = ['Customer Email'] as const
 
 // --- INV-002: list -------------------------------------------------------------------------
 
@@ -71,6 +73,10 @@ export interface InvoiceItem {
   days_until_due: number | null
   record_status: 'new' | 'updated'
   record_updated_at: string | null
+  /** INV-004 */
+  customer_email: string | null
+  can_remind: boolean
+  last_reminder_at: string | null
 }
 
 export type ViewCounts = Record<View, number>
@@ -80,6 +86,28 @@ export interface InvoicePage extends Page<InvoiceItem> {
   total_amount: string
   counts: ViewCounts
 }
+
+// --- INV-004: email reminder ---------------------------------------------------------------
+
+export interface ReminderDraft {
+  invoice_id: string
+  invoice_number: string
+  customer_name: string
+  /** The client's address on file, or null when the sheet had none. */
+  to: string | null
+  subject: string
+  message: string
+  last_reminder_at: string | null
+}
+
+export interface SentReminder {
+  id: string
+  invoice_id: string
+  to: string
+  sent_at: string
+}
+
+export const REMINDER_LIMITS = { subject: 200, message: 5000 } as const
 
 // --- INV-003: dashboard --------------------------------------------------------------------
 
@@ -126,6 +154,7 @@ export const invoiceKeys = {
   uploads: () => [...invoiceKeys.all, 'uploads'] as const,
   list: (query: InvoiceQuery) => [...invoiceKeys.all, 'list', query] as const,
   dashboard: () => [...invoiceKeys.all, 'dashboard'] as const,
+  reminderDraft: (id: string) => [...invoiceKeys.all, 'reminder-draft', id] as const,
 }
 
 export function uploadInvoices(file: File, onProgress?: (fraction: number) => void) {
@@ -142,6 +171,18 @@ export function listInvoices(query: InvoiceQuery) {
 
 export function exportUrl(query: InvoiceQuery): string {
   return `/api/invoices/export?${toApiParams(query, { paged: false })}`
+}
+
+export function getReminderDraft(invoiceId: string) {
+  return apiFetch<ReminderDraft>(`/invoices/${invoiceId}/reminder-draft`)
+}
+
+export function sendReminder(invoiceId: string, body: { subject: string; message: string }) {
+  return apiFetch<SentReminder>(`/invoices/${invoiceId}/reminders`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  })
 }
 
 export function getDashboard() {

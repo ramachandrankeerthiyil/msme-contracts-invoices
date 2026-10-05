@@ -3,6 +3,7 @@
 Every problem message is plain language, because it is shown to the user as-is.
 """
 
+import re
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from decimal import Decimal, InvalidOperation
@@ -14,10 +15,16 @@ DATE_RAISED = "Date Raised"
 DUE_DATE = "Due Date"
 AMOUNT = "Amount"
 PAID_DATE = "Paid Date"
+CUSTOMER_EMAIL = "Customer Email"
 REQUIRED_COLUMNS = (INVOICE_NUMBER, CUSTOMER_NAME, DATE_RAISED, DUE_DATE, AMOUNT, PAID_DATE)
+OPTIONAL_COLUMNS = (CUSTOMER_EMAIL,)
 
 MAX_INVOICE_NUMBER_LENGTH = 50
 MAX_CUSTOMER_NAME_LENGTH = 200
+MAX_EMAIL_LENGTH = 254
+# A conservative subset of valid addresses. It deliberately excludes spaces, commas, quotes,
+# semicolons and angle brackets, so a stored address can never become two recipients (INV-004).
+EMAIL_PATTERN = re.compile(r"^[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)+$")
 MAX_AMOUNT = Decimal("1000000000000")  # < 10^12 fits NUMERIC(14,2)
 CENT = Decimal("0.01")
 
@@ -40,6 +47,7 @@ class ParsedInvoice:
     due_date: date
     amount: Decimal
     paid_date: date | None
+    customer_email: str | None = None
 
     @property
     def key(self) -> str:
@@ -93,6 +101,16 @@ def parse_customer_name(value: Any) -> tuple[str | None, str | None]:
     if len(text) > MAX_CUSTOMER_NAME_LENGTH:
         return None, f"{CUSTOMER_NAME} is too long (max {MAX_CUSTOMER_NAME_LENGTH} characters)."
     return text, None
+
+
+def parse_customer_email(value: Any) -> tuple[str | None, str | None]:
+    """Optional: blank is fine and means "no address on file"."""
+    if _is_blank(value):
+        return None, None
+    text = str(value).strip()
+    if len(text) > MAX_EMAIL_LENGTH or not EMAIL_PATTERN.fullmatch(text):
+        return None, f"{CUSTOMER_EMAIL} '{text}' is not a valid email address."
+    return text.lower(), None
 
 
 def parse_date(value: Any, column: str, *, required: bool) -> tuple[date | None, str | None]:
@@ -161,6 +179,7 @@ def validate_row(
     due = check(DUE_DATE, parse_date(values.get(DUE_DATE), DUE_DATE, required=True))
     amount = check(AMOUNT, parse_amount(values.get(AMOUNT)))
     paid = check(PAID_DATE, parse_date(values.get(PAID_DATE), PAID_DATE, required=False))
+    email = check(CUSTOMER_EMAIL, parse_customer_email(values.get(CUSTOMER_EMAIL)))
 
     if raised and due and due < raised:
         problems.append(
@@ -174,4 +193,4 @@ def validate_row(
     if problems:
         return problems
     assert number and customer and raised and due and amount  # guaranteed when no problems
-    return ParsedInvoice(number, customer, raised, due, amount, paid)
+    return ParsedInvoice(number, customer, raised, due, amount, paid, email)

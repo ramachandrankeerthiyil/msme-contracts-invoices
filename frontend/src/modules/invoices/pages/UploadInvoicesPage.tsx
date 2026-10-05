@@ -12,6 +12,7 @@ import {
   INVOICE_FILE_TYPES,
   INVOICE_MAX_BYTES,
   invoiceKeys,
+  OPTIONAL_COLUMNS,
   REQUIRED_COLUMNS,
   TEMPLATE_URL,
   uploadInvoices,
@@ -93,6 +94,14 @@ function FileRequirements() {
             <li key={column} className="rounded-full bg-info-bg px-3 py-1 text-small font-semibold text-info">
               {column}
               {column === 'Paid Date' && ' (leave blank if unpaid)'}
+            </li>
+          ))}
+        </ul>
+        <p className="mt-4 text-text-muted">Optional:</p>
+        <ul className="mt-2 flex flex-wrap gap-2" aria-label="Optional columns">
+          {OPTIONAL_COLUMNS.map((column) => (
+            <li key={column} className="rounded-full bg-surface-strong px-3 py-1 text-small font-semibold text-text">
+              {column} (needed to send email reminders)
             </li>
           ))}
         </ul>
