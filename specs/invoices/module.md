@@ -8,8 +8,9 @@ status: approved
 
 **Service:** `services/invoice-service` · **DB schema:** `invoices` · **API base:** `/api/invoices`
 
-Lets a user upload an Excel sheet of invoices and see which ones are outstanding, which are at
-risk, and this week's totals. Independent of the Contracts module.
+Lets a user upload an Excel sheet of invoices, see which ones are outstanding, which are at
+risk, and this week's totals, and email a payment reminder to the client of an overdue invoice.
+Independent of the Contracts module.
 
 ## Features
 
@@ -18,6 +19,7 @@ risk, and this week's totals. Independent of the Contracts module.
 | INV-001 | Excel upload (create / update invoices) | implemented |
 | INV-002 | Invoice list with status flags | implemented |
 | INV-003 | Invoice dashboard | implemented |
+| INV-004 | Email payment reminder (also amends INV-001 and INV-002) | implemented |
 
 ## Excel input format
 
@@ -32,8 +34,10 @@ risk, and this week's totals. Independent of the Contracts module.
 | Due Date | Yes | date | Must be ≥ Date Raised |
 | Amount | Yes | number | Must be > 0, at most 2 decimals |
 | Paid Date | No | date | Blank = unpaid. Must be ≥ Date Raised. |
+| Customer Email | No (column may be absent) | email | Trimmed, stored lower-case, ≤ 254 chars, form `name@domain.tld`. Blank = no address. Used for reminders (INV-004). |
 
-A downloadable template (`GET /api/invoices/template`) has these exact headers.
+A downloadable template (`GET /api/invoices/template`) has these exact headers, with Customer
+Email last.
 
 ## Entities
 
@@ -52,8 +56,16 @@ rows_updated    int                      record_status    text  'new' | 'updated
 rows_overwritten int                     record_updated_at timestamptz NULL  (set when overwritten)
 rows_rejected   int                      first_upload_id  uuid FK → invoice_uploads
 rejections      jsonb [{row, invoice_number, reason}]   last_upload_id uuid FK → invoice_uploads
-overwrites      jsonb [{row, replaced_row, invoice_number}]   created_at / updated_at
+overwrites      jsonb [{row, replaced_row, invoice_number}]   customer_email text NULL   (INV-004)
+                                         created_at / updated_at
+
+invoice_reminders   (INV-004)
+─────────────────
+id uuid PK · invoice_id uuid FK → invoices (ON DELETE CASCADE) · recipient text · subject text
+body text · sent_at timestamptz · created_at / updated_at
 ```
+
+A row in `invoice_reminders` exists only for an email the mail server accepted.
 
 ## Business rules
 
@@ -89,6 +101,14 @@ an earlier one with the same invoice number.
 
 Record status is independent of payment status. An invoice can be both "Updated" and "Outstanding".
 
+### Payment reminder (INV-004)
+
+An invoice **can be reminded** when its payment status is **Outstanding** (so never Paid, At risk
+or Open). The service decides this at read time and at send time. A reminder goes **only** to the
+invoice's stored `customer_email`; there is no way to send to any other address. Sending a
+reminder does not change the invoice or its status. Reminders are an outbound record, not a
+payment state. The most recent one is shown as "Last reminder sent <date>".
+
 ### Current week
 
 The **current week** is the 7-day window `[U, U + 6 days]`, where **U = the date of the most
@@ -114,6 +134,8 @@ All amounts are **INR**, formatted `en-IN` with lakh/crore grouping: `₹4,25,00
 | GET | `/api/invoices/template` | Download the blank Excel template | INV-001 |
 | GET | `/api/invoices` | List with `status`, `follow_up`, `record_status`, `q`, sort, paging | INV-002 |
 | GET | `/api/invoices/dashboard` | KPI numbers for the current week | INV-003 |
+| GET | `/api/invoices/{id}/reminder-draft` | Compose a reminder draft (sends nothing) | INV-004 |
+| POST | `/api/invoices/{id}/reminders` | Send the reminder email and record it | INV-004 |
 | GET | `/health`, `/ready`, `/metrics` | Operations | PLT-002 |
 
 ## Decisions
@@ -126,6 +148,10 @@ All amounts are **INR**, formatted `en-IN` with lakh/crore grouping: `₹4,25,00
 | File formats | `.xlsx` only (no `.xls` or `.csv`) |
 | Does "updated" ever reset? | No. The date refreshes on each later overwrite. |
 | Need follow-up this week | Outstanding or at risk with due date ≤ end of week (includes older overdue) |
+| Which invoices can be emailed a reminder? | Outstanding only (decision 2026-10-05) |
+| Where does the recipient's address come from? | The optional Customer Email column; never typed in the UI (ADR-0004) |
+| Who writes the reminder? | A fixed template the user can edit before sending; no AI (ADR-0004) |
+| Where do reminder emails go by default? | A local Mailpit inbox, until real SMTP settings are set |
 
 ## Open questions
 

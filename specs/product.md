@@ -30,7 +30,7 @@ immediately sees **what needs attention this week**.
 | Module | Capability |
 |---|---|
 | Contracts | Upload a PDF or Word contract; extract parties, key dates, terms and risks; store them in PostgreSQL; list/detail view; dashboard |
-| Invoices | Upload an Excel invoice sheet; create or update invoices; flag outstanding and at-risk invoices; list view; dashboard |
+| Invoices | Upload an Excel invoice sheet; create or update invoices; flag outstanding and at-risk invoices; list view; dashboard; email a payment reminder to the client of an overdue invoice |
 | Assistant | "Talk to Me": ask questions about contracts and invoices in plain English; answers use only the user's data and link to each record (read-only) |
 | Platform | Professional, consistent app shell and navigation; logging and observability |
 
@@ -44,7 +44,8 @@ from both but changes nothing (ADR-0003).
 - Editing extracted contract data or invoices in the UI; deleting contracts
 - Legacy `.doc` / `.xls` files
 - Multiple currencies (all amounts are INR)
-- Sending reminders (email/SMS/WhatsApp)
+- Reminders other than the one-at-a-time email for an Outstanding invoice (INV-004): no bulk or
+  automatic reminders, no SMS or WhatsApp
 - Payments, tax, accounting integrations
 - OCR of scanned (image-only) documents
 - Scale, high availability, concurrency tuning
@@ -69,5 +70,6 @@ from both but changes nothing (ADR-0003).
 | **Outstanding** | Unpaid **and** past its due date |
 | **Invoice at risk** | Unpaid **and** due within the next 5 days |
 | **Needs follow-up** | Outstanding **or** at risk |
+| **Reminder** | A polite payment-request email sent to the client of an Outstanding invoice, to the address in the sheet's Customer Email column (INV-004) |
 | **Current week** | The 7 days starting on the date of the most recent invoice upload; an invoice is in it when its Due Date falls inside |
 | **Updated on <date>** | Record status of an invoice that was overwritten by a later row (in a later upload or later in the same file) |

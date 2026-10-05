@@ -80,7 +80,9 @@ boundary.
       "id": "…", "invoice_number": "INV-2606", "customer_name": "Deccan Printing Works",
       "date_raised": "2026-07-16", "due_date": "2026-08-15", "amount": "125000.00",
       "paid_date": null, "status": "outstanding", "days_until_due": -41,
-      "record_status": "new", "record_updated_at": null
+      "record_status": "new", "record_updated_at": null,
+      "customer_email": "accounts@deccanprinting.example", "can_remind": true,
+      "last_reminder_at": null
     }
   ],
   "total": 9, "page": 1, "page_size": 25,
@@ -88,6 +90,9 @@ boundary.
   "counts": { "follow_up": 9, "outstanding": 5, "at_risk": 4, "open": 3, "paid": 5, "all": 17 }
 }
 ```
+- `customer_email`, `can_remind` and `last_reminder_at` support the email reminder (INV-004):
+  the address on file (or `null`), whether the invoice may be reminded (true when Outstanding),
+  and the time of the latest reminder (or `null`). They do not affect filters or sorting.
 - `total` and `total_amount` cover **every row matching the filters**, not just the current page
   (AC6).
 - `counts` apply `q`, `updated` and the due-date range, but **not** `view`. That way each tab's
@@ -160,6 +165,12 @@ beneath), Customer, Due (date + hint; paid invoices show "paid on <date>"), Amou
 Record. Every field from AC1 is still shown. Sortable columns: Invoice, Customer, Due, Amount,
 Status (the API still accepts `date_raised` / `paid_date` sorts). A Playwright test checks
 that the table fits at 1280px.
+
+**INV-004 adds a Reminder column** (the "Send email reminder" button and "Last reminder sent
+<date>"), described in `INV-004-email-reminder/design.md`. Seven columns overflowed a 1280px screen
+by 83px, so the **Record status moved under the invoice number** (below "Raised <date>"); the table
+is again six columns: Invoice, Customer, Due, Amount, Status, Reminder. The Playwright fit test
+keeps guarding it.
 
 ## Observability
 

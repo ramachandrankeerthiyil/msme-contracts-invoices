@@ -102,6 +102,7 @@ Navigation behaviour is specified in `platform/PLT-001-app-shell-and-navigation`
 | **Status badge** | Pill with icon + label from the status table. Minimum 16px text. |
 | **Data table** | Sticky header, 56px rows, zebra `--color-surface-strong`, right-aligned numbers, sortable column headers with a visible sort arrow, and pagination with "Showing 1–25 of 140". |
 | **File upload** | Large drop zone **and** a "Choose file" button; accepted formats and size limit stated in text; progress bar; clear success/error summary. |
+| **Dialog** | Centred modal on Radix Dialog: dimmed overlay, a title, content, and visible text buttons at the bottom (primary action first, then Cancel/Close). Never icon-only controls. Focus moves in on open, Escape closes, focus returns to the opener. Use only for a short, focused task that needs confirmation (e.g. reviewing an email before sending). |
 | **Alerts** | Inline banner with icon, title and a plain-language message. Errors show what to do next. |
 | **Empty state** | Illustration/icon, one sentence, and the primary action (e.g. "No invoices yet — Upload invoices"). |
 | **Loading** | Skeletons shaped like the content. For AI extraction, a progress message: "Reading your contract… this usually takes under a minute." |

@@ -65,3 +65,8 @@ Branch: `feat/INV-001-excel-upload` (after PLT-002 and PLT-001 have merged)
   keyboard-only upload, template download, wrong-type refusal and an axe check on the result.
 - Implementation notes: duplicate resolution lives in `app/domain/duplicates.py`; parsing and
   file I/O run in a worker thread (`asyncio.to_thread`) to keep the event loop free.
+
+## Amendment (2026-10-05) — AC13, optional Customer Email
+
+Implemented as part of INV-004: see `INV-004-email-reminder/tasks.md`, section A (tasks 1–5).
+This feature returns to `implemented` when those tasks are done.

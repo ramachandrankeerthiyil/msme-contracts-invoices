@@ -49,3 +49,9 @@ the same status and filter code).
 - End to end: 44 Playwright tests passed, including: each dashboard card's number equals the
   list it opens; follow-up includes invoices overdue before the week; the table fits 1280px;
   axe on list and dashboard. `scripts/e2e.sh` regenerates the date-relative samples first.
+
+## Amendment (2026-10-05) — Reminder column
+
+The list gains three fields and a Reminder column as part of INV-004: see
+`INV-004-email-reminder/tasks.md`, tasks 10, 12 and 20. This feature returns to `implemented`
+when those tasks are done.

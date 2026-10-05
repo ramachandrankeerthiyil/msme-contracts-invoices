@@ -16,7 +16,7 @@ whom to chase first.
 
 | ID | Criterion |
 |---|---|
-| INV-002-AC1 | THE SYSTEM SHALL list invoices in a table with: invoice number, customer name, date raised, due date, amount, paid date, payment status badge, due hint ("due in 3 days", "12 days overdue", "paid on 20 Sep 2026"), and a **Record status** column. |
+| INV-002-AC1 | THE SYSTEM SHALL list invoices in a table with: invoice number, customer name, date raised, due date, amount, paid date, payment status badge, due hint ("due in 3 days", "12 days overdue", "paid on 20 Sep 2026"), and the **Record status** (shown under the invoice number). |
 | INV-002-AC1a | THE SYSTEM SHALL show Record status as "New", or as an Info badge reading "Updated on <date>" (from `record_updated_at`, e.g. "Updated on 24 Sep 2026"). |
 | INV-002-AC2 | THE SYSTEM SHALL compute payment status (Paid, Outstanding, At risk, Open) using the rules in `invoices/module.md`, relative to today. |
 | INV-002-AC3 | THE SYSTEM SHALL show quick-filter tabs with counts: **Needs follow-up** (default), Outstanding, At risk, Open, Paid, All. |
@@ -30,8 +30,16 @@ whom to chase first.
 ## Out of scope
 
 - Editing invoices or marking them paid in the UI (re-upload the sheet instead).
-- Sending reminders.
+- Sending reminders from the list is specified separately in INV-004. The list only hosts its
+  button and "Last reminder sent" text.
 
 ## Open questions
 
 - None. (Resolved: INR with `en-IN` formatting.)
+
+## Changelog
+
+- **2026-10-05** — "Sending reminders" is no longer out of scope: INV-004 adds a **Reminder**
+  column to the table and three fields to each list item. To keep the table within a 1280px
+  screen, AC1's Record status moved from its own column to under the invoice number; AC1 is
+  reworded to say so, and AC1a (what it shows) is unchanged. Re-approved together with INV-004.

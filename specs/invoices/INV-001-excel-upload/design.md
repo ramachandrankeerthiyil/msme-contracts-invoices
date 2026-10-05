@@ -65,12 +65,16 @@ and `overwrites`.
 
 Returns `invoice-template.xlsx` (`Content-Disposition: attachment`), built on the fly with
 openpyxl:
-- **Sheet 1 "Invoices":** the 6 headers (bold, light-blue fill, frozen header row, sensible
-  column widths, date columns formatted `DD-MMM-YYYY`) and one example row.
+- **Sheet 1 "Invoices":** the 6 required headers plus the optional **Customer Email** (bold,
+  light-blue fill, frozen header row, sensible column widths, date columns formatted
+  `DD-MMM-YYYY`) and one example row, including an example email address (AC11, AC13).
 - **Sheet 2 "How to fill this in":** plain-language rules for each column. Only sheet 1 is read
   on upload.
 
-## Data (migration `0001_create_invoice_tables`)
+## Data (migration `0001_create_invoice_tables`; `customer_email` added by `0002`, INV-004)
+
+`invoices.customer_email text NULL` holds the optional Customer Email (AC13). The `CREATE TABLE`
+below is the `0001` shape.
 
 ```sql
 CREATE TABLE invoices.invoice_uploads (
@@ -112,7 +116,8 @@ CREATE INDEX ON invoices.invoices (paid_date);
 - Row 1. Normalise each header: trim, collapse inner whitespace, lowercase.
 - Required: `invoice number`, `customer name`, `date raised`, `due date`, `amount`, `paid date`.
   Extra columns are ignored, and column order doesn't matter.
-- Any missing header → `MISSING_COLUMNS`, listing names in their display form.
+- Optional: `customer email`. It is read when present and never causes `MISSING_COLUMNS` (AC13).
+- Any missing **required** header → `MISSING_COLUMNS`, listing names in their display form.
 
 ### 3. Rows (AC4, AC7)
 - Data rows start at row 2. Fully blank rows are skipped and not counted. `row` in messages is
@@ -126,6 +131,7 @@ CREATE INDEX ON invoices.invoices (paid_date);
 | Customer Name | text, trimmed, ≤ 200 chars | "Customer Name is missing." |
 | Date Raised / Due Date / Paid Date | Excel date cells; Excel serial numbers; text in `YYYY-MM-DD`, `DD-MM-YYYY`, `DD/MM/YYYY`, `DD-Mon-YYYY`, `DD Mon YYYY` (**day first**, Indian convention) | "Due Date '31/13/2026' is not a valid date." |
 | Amount | numbers; text with `₹`, `,` and spaces stripped; `Decimal`, > 0, ≤ 2 decimals, < 10¹² | "Amount must be greater than zero." / "Amount can have at most 2 decimal places." |
+| Customer Email (optional) | blank, or text of the form `name@domain.tld` with no spaces, ≤ 254 chars; trimmed and lower-cased; blank is stored as `NULL` | "Customer Email 'accounts@' is not a valid email address." |
 | Cross-field | `due_date ≥ date_raised`; `paid_date ≥ date_raised` (if present) | "Due Date (01 Sep 2026) is before Date Raised (05 Sep 2026)." |
 
 - Blank Paid Date → unpaid; a valid Paid Date → paid (AC7).
@@ -152,7 +158,8 @@ One transaction (`async with session.begin()`):
    ON CONFLICT (invoice_number_key) DO UPDATE SET
           invoice_number = EXCLUDED.invoice_number, customer_name = EXCLUDED.customer_name,
           date_raised = EXCLUDED.date_raised, due_date = EXCLUDED.due_date, amount = EXCLUDED.amount,
-          paid_date = EXCLUDED.paid_date, record_status = 'updated', record_updated_at = :now,
+          paid_date = EXCLUDED.paid_date, customer_email = EXCLUDED.customer_email,
+          record_status = 'updated', record_updated_at = :now,
           last_upload_id = EXCLUDED.last_upload_id, updated_at = :now
    RETURNING (xmax = 0) AS inserted;
    ```
@@ -188,6 +195,7 @@ Page header: **Upload invoices** (breadcrumb Invoices › Upload).
   here", **or** a "Choose file" secondary button. `accept=".xlsx"`.
 - Helper text: "Excel (.xlsx), up to 10 MB." Required columns are shown as a list:
   Invoice Number · Customer Name · Date Raised · Due Date · Amount · Paid Date (leave blank if unpaid).
+  Below it, an "Optional" line: **Customer Email** (needed to send email reminders).
 - A "Download template" link-button with a download icon.
 - The client checks extension and size before upload and shows the same messages as the API.
 
@@ -256,6 +264,12 @@ status) for demos.
 | AC8 | Upload row counts; `status = no_valid_rows` when all rows are rejected; current-week anchor ignores it |
 | AC9 | Playwright: upload the sample → summary line, rejected-rows table, View invoices button |
 | AC10 | Performance test: a generated 5,000-row file completes in < 10s (marked `slow`) |
-| AC11 | Template endpoint returns a workbook whose sheet 1 headers match the spec exactly; uploading the template succeeds with 1 row created |
+| AC11 | Template endpoint returns a workbook whose sheet 1 headers match the spec exactly (6 required + Customer Email); uploading the template succeeds with 1 row created, with its example email stored |
+| AC13 | Unit: email parsing (valid, blank, trimmed, lower-cased, no `@`, spaces, missing domain, over 254 chars). Upload API: email stored lower-cased; absent column uploads fine and stores `NULL`; a later upload overwrites it and a blank cell clears it; an invalid address rejects only that row with the reason. Vitest: the upload page lists Customer Email as optional. |
+
+## Changelog
+
+- **2026-10-05** — Customer Email (optional column): header handling, row validation, persistence,
+  template and upload-page text, for INV-004. Re-approved together with INV-004.
 | AC12 | DB failure injected mid-upsert → no invoices, no upload row, no stored file |
 | PLT-002 | `invoice_upload.completed` log fields; metrics counters increment |

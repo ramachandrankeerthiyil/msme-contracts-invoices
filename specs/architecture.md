@@ -23,6 +23,7 @@ A three-tier, API-driven architecture. It is a POC: optimise for clarity and sim
                  │                                                                        │
                  │  contract-service ──HTTPS──► Claude API (contract extraction)          │
                  │  assistant-service ─HTTPS──► Claude API (Talk to Me answers)          │
+                 │  invoice-service ───SMTP───► mailpit (default sink) / real mail server │
                  └────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -33,7 +34,7 @@ A three-tier, API-driven architecture. It is a POC: optimise for clarity and sim
 | 1 — Presentation | `frontend/` React SPA | Screens, navigation, calling the APIs. **No business rules**: it displays the statuses and totals the services compute. |
 | — | `gateway/` Nginx | Single entry point, routing, request ID generation, upload size limits |
 | 2 — Business logic | `services/contract-service` | Contract upload, text extraction, AI extraction, status & risk rules, contract dashboard |
-| 2 — Business logic | `services/invoice-service` | Excel parsing & validation, create/update, status & risk rules, invoice dashboard |
+| 2 — Business logic | `services/invoice-service` | Excel parsing & validation, create/update, status & risk rules, invoice dashboard, payment-reminder emails (ADR-0004) |
 | 2 — Business logic | `services/assistant-service` | "Talk to Me": answers questions with Claude, using read-only lookups of the other two APIs. Stateless, no database (ADR-0003) |
 | 3 — Data | PostgreSQL | One schema per service. Uploaded files are stored on a Docker volume and referenced by path. |
 
@@ -54,6 +55,7 @@ A three-tier, API-driven architecture. It is a POC: optimise for clarity and sim
 | Services | Python 3.12, FastAPI, Pydantic v2, SQLAlchemy 2, Alembic | ADR-0001 |
 | Document parsing | `pdfplumber` (PDF), `python-docx` (DOCX), `openpyxl` (XLSX) | ADR-0001 |
 | Contract extraction | Claude API with structured (JSON-schema) output | ADR-0002 |
+| Outgoing email | SMTP via Python `smtplib`; Mailpit as the default local sink | ADR-0004 |
 | Database | PostgreSQL 16 | ADR-0001 |
 | Runtime | Docker Compose | ADR-0001 |
 | Testing | pytest (services), Vitest (frontend), Playwright (end to end) | ADR-0001 |
@@ -97,3 +99,6 @@ There is no authentication, by design. Even so:
 - Keep the Claude API key only in `.env`, and only in contract-service and assistant-service.
 - Talk to Me renders answers as Markdown without raw HTML and allows only in-app links.
 - Do not log document contents or full extraction payloads at INFO level.
+- SMTP credentials live only in `.env` and only in invoice-service. Reminder emails go only to the
+  address stored on the invoice, never to an address supplied by the browser. Recipient, subject
+  and message are never logged (ADR-0004).
