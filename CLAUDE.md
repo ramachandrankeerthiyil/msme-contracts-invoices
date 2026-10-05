@@ -79,6 +79,12 @@ docker compose run --rm invoice-service alembic revision --autogenerate -m "desc
   app guide for "what is this app / how does it work" is `app/assistant/app_guide.py`: **update it
   when the app's behaviour changes**. With `ASSISTANT_LLM=fake` a keyword guard is used, so tests
   never call the AI. The golden questions for every intent are in the opt-in `-m llm` eval.
+- Public access (PLT-003): the app has no user accounts, so a public address needs the gateway's
+  shared password. Set `ACCESS_PASSWORD` (12+ characters, `openssl rand -base64 18`) in `.env`,
+  run `docker compose up -d gateway`, then `scripts/tunnel.sh` for a `trycloudflare.com` address.
+  The tunnel script refuses to start unless the gateway answers `401`, and `scripts/e2e.sh`
+  refuses to run while a tunnel is up. `scripts/gateway-access-test.sh` tests the gate. A
+  permanent address: a named Cloudflare tunnel on your domain, ideally behind Cloudflare Access.
 - `/health`, `/ready`, `/metrics` are internal only (not routed by the gateway).
 - `app/core/` is intentionally duplicated in all three services — change every copy together.
 - Contract reading: `CONTRACT_EXTRACTOR=claude` (default) or `fake` (tests/e2e, no API calls).

@@ -158,6 +158,10 @@ services:
 
   gateway:
     build: ./gateway
+    environment:
+      # Optional shared password for the whole app (PLT-003). Empty = open, as before.
+      ACCESS_USERNAME: ${ACCESS_USERNAME:-user}
+      ACCESS_PASSWORD: ${ACCESS_PASSWORD:-}
     ports:
       - "8080:80"
     depends_on:

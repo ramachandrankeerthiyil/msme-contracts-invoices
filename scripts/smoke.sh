@@ -8,6 +8,10 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 GATEWAY=http://localhost:8080
+# With an access password on the gateway (PLT-003), put it in the environment to run this script:
+#   ACCESS_PASSWORD=... scripts/smoke.sh
+AUTH=()
+if [[ -n "${ACCESS_PASSWORD:-}" ]]; then AUTH=(-u "${ACCESS_USERNAME:-user}:$ACCESS_PASSWORD"); fi
 PROFILE_ARGS=()
 if [[ "${1:-}" == "--observability" ]]; then
   PROFILE_ARGS=(--profile observability)
@@ -24,7 +28,7 @@ curl -fsS "$GATEWAY/healthz" >/dev/null && pass "gateway /healthz" || fail "gate
 
 for svc in invoices contracts; do
   rid="smoke-${svc}-$RANDOM$RANDOM"
-  headers=$(curl -fsS -D - -o /dev/null -H "X-Request-ID: $rid" "$GATEWAY/api/$svc/openapi.json") \
+  headers=$(curl -fsS "${AUTH[@]}" -D - -o /dev/null -H "X-Request-ID: $rid" "$GATEWAY/api/$svc/openapi.json") \
     || fail "GET /api/$svc/openapi.json through gateway"
   echo "$headers" | grep -qi "^x-request-id: $rid" \
     && pass "/api/$svc: request ID echoed" || fail "/api/$svc: request ID not echoed"
@@ -34,11 +38,11 @@ for svc in invoices contracts; do
     || fail "/api/$svc: request ID missing from service logs"
 done
 
-bad_headers=$(curl -sS -D - -o /dev/null -H 'X-Request-ID: bad id' "$GATEWAY/api/invoices/openapi.json")
+bad_headers=$(curl -sS "${AUTH[@]}" -D - -o /dev/null -H 'X-Request-ID: bad id' "$GATEWAY/api/invoices/openapi.json")
 echo "$bad_headers" | grep -i '^x-request-id:' | grep -qv 'bad id' \
   && pass "malformed request ID replaced" || fail "malformed request ID was not replaced"
 
-status=$(curl -s -o /dev/null -w '%{http_code}' "$GATEWAY/api/unknown/thing")
+status=$(curl -s "${AUTH[@]}" -o /dev/null -w '%{http_code}' "$GATEWAY/api/unknown/thing")
 [[ "$status" == "404" ]] && pass "unknown API path → 404 JSON" || fail "unknown API path returned $status"
 
 for svc in invoice-service contract-service; do
