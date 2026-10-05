@@ -101,6 +101,8 @@ There is no authentication, by design. Even so:
   classifies every question before the main model sees it, and declined questions get a fixed
   reply and reach neither the model nor the tools (ADR-0005).
 - Do not log document contents or full extraction payloads at INFO level.
+- For a public address, the gateway can require one shared password (`ACCESS_PASSWORD`, PLT-003).
+  It is a front-door lock, not user accounts; it is off unless the variable is set.
 - SMTP credentials live only in `.env` and only in invoice-service. Reminder emails go only to the
   address stored on the invoice, never to an address supplied by the browser. Recipient, subject
   and message are never logged (ADR-0004).
