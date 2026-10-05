@@ -49,3 +49,9 @@ Branch: `feat/AST-001-conversational-assistant` (the pre-assistant version is ta
         skipped by the product owner (2026-09-26); `pytest -m llm` remains available.
 - [x] 17. Docs (README, CLAUDE.md, architecture.md, product.md); set statuses `implemented`; on
         approval merge to `main` and tag `v1.1-assistant`.
+
+## Amendment (2026-10-05) — guardrails
+
+Boundary enforcement, the app guide and the new suggestions are implemented as AST-002: see
+`AST-002-assistant-guardrails/tasks.md`. This feature returns to `implemented` when those tasks
+are done.

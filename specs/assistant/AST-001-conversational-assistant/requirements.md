@@ -29,7 +29,7 @@ a short, accurate answer based on their own live data, with links to the underly
 | ID | Criterion |
 |---|---|
 | AST-001-AC1 | THE SYSTEM SHALL add an **Talk to Me** item (icon + label) to the left navigation, in its own **ASSISTANT** group, opening the page `/assistant`, with the same header, breadcrumb and focus behaviour as other pages (PLT-001). |
-| AST-001-AC2 | WHEN a conversation is empty THE SYSTEM SHALL show a short welcome and 4–6 suggested questions covering both contracts and invoices; choosing one SHALL ask it. |
+| AST-001-AC2 | WHEN a conversation is empty THE SYSTEM SHALL show a short welcome and 4–8 suggested questions covering contracts, invoices and the app itself (AST-002); choosing one SHALL ask it. |
 | AST-001-AC3 | THE SYSTEM SHALL provide a labelled multi-line question box: Enter sends, Shift+Enter adds a new line, a 48px **Send** button (icon + label) sends, and it SHALL accept at most 1,000 characters, telling the user when the limit is near. |
 | AST-001-AC4 | WHEN a question is sent THE SYSTEM SHALL show the answer progressively as it is written, and SHALL offer a **Stop** button that ends the answer, keeping what was written so far. |
 | AST-001-AC5 | THE SYSTEM SHALL answer only from the user's live data, obtained through read-only lookups of the existing contract and invoice APIs. IF the data does not answer the question THEN it SHALL say so rather than guess. |
@@ -37,7 +37,7 @@ a short, accurate answer based on their own live data, with links to the underly
 | AST-001-AC7 | THE SYSTEM SHALL link every contract or invoice it mentions to that record's page in the app. |
 | AST-001-AC8 | THE SYSTEM SHALL understand follow-up questions within the same conversation, keep the conversation when the page is refreshed in the same browser tab, and offer **New conversation** to start again. |
 | AST-001-AC9 | THE SYSTEM SHALL write short, plain-language answers, using lists or small tables where they help, with amounts in INR (₹4,25,000.00), dates like "24 Sep 2026", and "today" meaning today in Asia/Kolkata. |
-| AST-001-AC10 | IF a question is not about the user's contracts or invoices, asks for legal advice, or asks to change data THEN THE SYSTEM SHALL politely say what it can help with instead. The assistant SHALL NOT be able to change any data. |
+| AST-001-AC10 | IF a question is not about the user's contracts, invoices or this app, asks for legal advice, or asks to change data THEN THE SYSTEM SHALL politely say what it can help with instead. The assistant SHALL NOT be able to change any data. How this is enforced is specified in AST-002. |
 | AST-001-AC11 | THE SYSTEM SHALL show, near the question box, "Talk to Me can make mistakes. Check important details on the contract or invoice page." |
 | AST-001-AC12 | IF answering fails THEN THE SYSTEM SHALL show a plain-language message with **Try again** and a reference number (PLT-002). The rest of the app SHALL keep working when the assistant is unavailable. |
 | AST-001-AC13 | THE SYSTEM SHALL meet the design system's accessibility rules: 18px base text, fully usable by keyboard, a finished answer announced once to screen readers (not word by word), focus returned to the question box after answering, no serious axe issues, and usable on a phone-width screen. |
@@ -63,3 +63,9 @@ a short, accurate answer based on their own live data, with links to the underly
 ## Open questions
 
 - None.
+
+## Changelog
+
+- **2026-10-05** — AC2 now allows 4–8 suggestions and includes questions about the app; AC10 now
+  also allows questions about the app and points to AST-002, which makes the boundary firm
+  (guard in front of the model, fixed replies, app guide). Re-approved together with AST-002.

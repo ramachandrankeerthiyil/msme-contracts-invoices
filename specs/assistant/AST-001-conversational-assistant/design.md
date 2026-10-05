@@ -207,3 +207,10 @@ WARNING only, because their request lines include query strings with the model's
    the assistant in fake mode, like contracts.
 3. After merging, tag the release `v1.1-assistant`. Either version can be restored at any time
    (`git switch --create restore-v1.0 v1.0-poc`).
+
+## Changelog
+
+- **2026-10-05** — AST-002 adds an intent check before the loop shown in "Overview", a Scope
+  section and an app guide in the system prompt, and two suggestions and new text on the page. See
+  `AST-002-assistant-guardrails/design.md`. The tools, loop and API are otherwise unchanged. The
+  event stream gains one `done` value, `stop_reason: "declined"`, for fixed replies.

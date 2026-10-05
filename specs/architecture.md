@@ -35,7 +35,7 @@ A three-tier, API-driven architecture. It is a POC: optimise for clarity and sim
 | — | `gateway/` Nginx | Single entry point, routing, request ID generation, upload size limits |
 | 2 — Business logic | `services/contract-service` | Contract upload, text extraction, AI extraction, status & risk rules, contract dashboard |
 | 2 — Business logic | `services/invoice-service` | Excel parsing & validation, create/update, status & risk rules, invoice dashboard, payment-reminder emails (ADR-0004) |
-| 2 — Business logic | `services/assistant-service` | "Talk to Me": answers questions with Claude, using read-only lookups of the other two APIs. Stateless, no database (ADR-0003) |
+| 2 — Business logic | `services/assistant-service` | "Talk to Me": answers questions with Claude, using read-only lookups of the other two APIs, and explains the app from a built-in guide. A small guard model checks every question first and declines anything off topic (ADR-0005). Stateless, no database (ADR-0003) |
 | 3 — Data | PostgreSQL | One schema per service. Uploaded files are stored on a Docker volume and referenced by path. |
 
 ## Service independence rules
@@ -97,7 +97,9 @@ There is no authentication, by design. Even so:
 - Validate file type by content (magic bytes), not only by extension; enforce size limits.
 - Never execute or render uploaded content as HTML.
 - Keep the Claude API key only in `.env`, and only in contract-service and assistant-service.
-- Talk to Me renders answers as Markdown without raw HTML and allows only in-app links.
+- Talk to Me renders answers as Markdown without raw HTML and allows only in-app links. A guard
+  classifies every question before the main model sees it, and declined questions get a fixed
+  reply and reach neither the model nor the tools (ADR-0005).
 - Do not log document contents or full extraction payloads at INFO level.
 - SMTP credentials live only in `.env` and only in invoice-service. Reminder emails go only to the
   address stored on the invoice, never to an address supplied by the browser. Recipient, subject
